@@ -11,6 +11,7 @@ mod code;
 mod gen;
 mod harness;
 mod recipes;
+mod render;
 mod run;
 mod spec;
 

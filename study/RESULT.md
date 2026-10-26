@@ -67,3 +67,19 @@ small to exercise it; guard behaviour at length 7 decided 26 outcomes; a single 
 (no repeated measurement beyond the borderline rule); the sign-flip test and the Wilson-overlap rule are the
 library's, used as is. A study with a larger library (more training workloads covering every recipe, or more
 recipes accepted at training) is the clear next step; it would need a new preregistration.
+
+## Audit and reproducibility
+
+- All 111 reports were checked against `study/manifest.json`: `baseline_digest`, `candidate_digest` and
+  `contract_digest` equal the frozen `baseline_tree_digest`, per-candidate `tree_digest` and
+  `contract_struct_digest` for every pair (111/111; `rune-eval` also enforced the contract digest via
+  `--expect-digest`).
+- Candidates are not committed. `rune-study gen --study study --candidates <dir>` regenerates them
+  byte-for-byte (tree digests in `manifest.json`; covered by the determinism test).
+- Code changes after the preregistration commit `111aba2`: the preregistered analysis code is unchanged.
+  `crates/rune-study/src/analyze.rs` gained the post hoc exploratory k = 1, 2 block, and its markdown helpers
+  were then moved to `render.rs` (no behaviour change; `control-report.md` regenerates identically apart from
+  that block). No workload, recipe, contract, split, k, seed or rule was changed.
+- Not done: repeated measurement beyond the borderline rule (one evaluation per pair); any claim for k < 3
+  beyond the exploratory table; the next step is a NEW preregistration (larger training set covering every
+  recipe family, or a recipe set that yields a library larger than k), not a tweak of this one.
