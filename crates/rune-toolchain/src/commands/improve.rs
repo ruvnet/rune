@@ -64,8 +64,11 @@ pub(super) fn improve(
         }),
     )?;
     ledger.settle(reservation, cost, u.total_tokens, note)?;
+    let finish = reply.finish_reason.clone();
     let candidate = reply.candidate.map_err(|_| {
-        Failure::Other("provider or schema failure; usage settled, nothing was applied".into())
+        Failure::Other(format!(
+            "provider or schema failure (finish_reason={finish}); usage settled, nothing was applied"
+        ))
     })?;
     println!(
         "{}",

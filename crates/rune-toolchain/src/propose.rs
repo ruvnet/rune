@@ -21,11 +21,13 @@ pub fn base_url(override_url: Option<&str>) -> String {
     }
 }
 
+/// No `temperature`: the only endpoint (Moonshot AI) does not list it, and
+/// `require_parameters` (kept) makes unsupported parameters a 404.
 pub fn request_body(max_tokens: u64) -> Value {
     json!({
         "model": MODEL,
-        "max_tokens": max_tokens.min(1000),
-        "temperature": 0,
+        "max_tokens": max_tokens.min(2000),
+        "reasoning": {"effort": "low"},
         "usage": {"include": true},
         "provider": {"data_collection": "deny", "zdr": true,
                      "require_parameters": true, "allow_fallbacks": false},
@@ -40,7 +42,7 @@ pub fn request_body(max_tokens: u64) -> Value {
 /// costs at most one per request byte; output is capped by `max_tokens`.
 pub fn estimate(body: &Value) -> (f64, u64) {
     let in_tokens = body.to_string().len() as u64;
-    let out_tokens = body["max_tokens"].as_u64().unwrap_or(1000);
+    let out_tokens = body["max_tokens"].as_u64().unwrap_or(2000);
     let usd =
         in_tokens as f64 * RESERVE_USD_PER_IN_TOKEN + out_tokens as f64 * RESERVE_USD_PER_OUT_TOKEN;
     (usd, in_tokens + out_tokens)
@@ -86,6 +88,7 @@ pub fn parse_usage(resp: &Value) -> Usage {
 pub struct Reply {
     pub id: String,
     pub model: String,
+    pub finish_reason: String,
     pub usage: Usage,
     pub candidate: Result<Value, ()>,
 }
@@ -138,6 +141,12 @@ pub fn call(base: &str, key: &str, body: &Value, timeout_s: u64) -> Result<Reply
     Ok(Reply {
         id: resp["id"].as_str().unwrap_or_default().to_string(),
         model: resp["model"].as_str().unwrap_or_default().to_string(),
+        finish_reason: resp["choices"][0]["finish_reason"]
+            .as_str()
+            .unwrap_or("unknown")
+            .chars()
+            .take(32)
+            .collect(),
         usage: parse_usage(&resp),
         candidate,
     })
@@ -168,7 +177,7 @@ mod tests {
     #[test]
     fn body_pins_privacy_caps_tokens_and_requests_usage() {
         let b = request_body(10_000_000);
-        assert_eq!(b["max_tokens"], 1000);
+        assert_eq!(b["max_tokens"], 2000);
         assert_eq!(b["provider"]["zdr"], true);
         assert_eq!(b["provider"]["data_collection"], "deny");
         assert_eq!(b["provider"]["allow_fallbacks"], false);
@@ -200,7 +209,7 @@ mod tests {
     fn estimate_bounds_a_default_request() {
         let (usd, tokens) = estimate(&request_body(200_000));
         assert!(usd > 0.0 && usd < 0.05, "{usd}");
-        assert!(tokens > 1000 && tokens < 3000);
+        assert!(tokens > 1000 && tokens < 4000);
     }
 
     #[test]
