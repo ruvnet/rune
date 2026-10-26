@@ -74,6 +74,10 @@ fn slow_and_marginal_candidates_lack_improvement() {
         Reject::InsufficientImprovement(_)
     ));
     assert!(marginal.report.speedup_ci95_low <= 1.10);
+    assert!(
+        marginal.report.speedup_mean > 1.0,
+        "real but insufficient gain, not a regression"
+    );
     eprintln!(
         "marginal: mean {:.4} CI [{:.4}, {:.4}] n={}",
         marginal.report.speedup_mean,
