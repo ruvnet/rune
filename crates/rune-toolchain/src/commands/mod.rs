@@ -1,7 +1,16 @@
 mod build;
+mod cleanup;
+mod common;
+mod edit;
+mod eval;
+mod explain;
 mod improve;
+mod package;
+mod promote;
+mod recipes;
+mod target;
 
-use clap::Args;
+use clap::{Args, Subcommand};
 use rune_core::{Error, Policy, Store};
 use std::path::Path;
 
@@ -29,19 +38,54 @@ impl Budget {
     }
 }
 
-pub enum Op {
+#[derive(Subcommand)]
+pub enum Cmd {
+    /// Replay the approved plan with no model call; --freeze approves a new plan first
     Build {
+        #[arg(long)]
         freeze: bool,
+        #[command(flatten)]
         budget: Budget,
     },
+    /// Explore candidate improvements within an explicit budget (never applies code)
     Improve {
+        #[command(flatten)]
         budget: Budget,
+        /// Campaign id for the cost ledger (default: derived from the approved plan id)
+        #[arg(long)]
         campaign: Option<String>,
+        /// Compare ledger totals with provider-reported totals instead of requesting
+        #[arg(long)]
         reconcile: bool,
     },
+    /// Rebuild independently and compare against the recorded artifact digest
     Verify,
+    /// Show the approved plan, its lineage, ledger, evaluation, approvals and artifact status
     Explain,
+    /// Restore the previous approved plan
     Rollback,
+    /// Apply one confined, hash-checked edit (exact replace, or Agent Booster with --booster)
+    Edit(Box<edit::Args>),
+    /// Run Rune's independent evaluator; exit 0 on accept, 1 on reject
+    Eval(Box<eval::Args>),
+    /// Evidence memory: recipes are ranked for search, never approved by similarity
+    Recipes {
+        #[command(subcommand)]
+        cmd: recipes::Cmd,
+    },
+    /// Approve a new plan bound to the exact tested artifact and policy
+    Promote(Box<promote::Args>),
+    /// Hardware targets: list descriptors, cross-build, run and classify evidence
+    Target {
+        #[command(subcommand)]
+        cmd: target::Cmd,
+    },
+    /// Write the signed-or-unsigned evidence-directory artifact envelope for the current plan
+    Package(Box<package::Args>),
+    /// Verify an evidence-directory artifact and run the load gate
+    VerifyArtifact(Box<package::VerifyArgs>),
+    /// Quarantine-first cleanup of unreachable generated objects (dry run by default)
+    Cleanup(Box<cleanup::Args>),
 }
 
 pub enum Failure {
@@ -55,21 +99,46 @@ impl From<Error> for Failure {
     }
 }
 
-pub fn run(ws: &Path, op: Op) -> Result<(), Failure> {
+macro_rules! failure_from {
+    ($($t:ty),*) => {$(
+        impl From<$t> for Failure {
+            fn from(e: $t) -> Self {
+                Failure::Other(e.to_string())
+            }
+        }
+    )*};
+}
+failure_from!(
+    rune_memory::Error,
+    rune_target::Error,
+    rune_gc::Error,
+    std::io::Error,
+    serde_json::Error
+);
+
+pub fn run(ws: &Path, cmd: Cmd) -> Result<(), Failure> {
     let store = Store::open(ws);
-    match op {
-        Op::Build { freeze, budget } => build::build(ws, &store, freeze, &budget),
-        Op::Improve {
+    match cmd {
+        Cmd::Build { freeze, budget } => build::build(ws, &store, freeze, &budget),
+        Cmd::Improve {
             budget,
             campaign,
             reconcile,
         } => improve::improve(ws, &store, &budget, campaign.as_deref(), reconcile),
-        Op::Verify => build::verify(ws, &store),
-        Op::Explain => build::explain(&store),
-        Op::Rollback => {
+        Cmd::Verify => build::verify(ws, &store),
+        Cmd::Explain => explain::explain(ws, &store),
+        Cmd::Rollback => {
             let id = store.rollback()?;
             println!("rolled back; current plan {id}");
             Ok(())
         }
+        Cmd::Edit(a) => edit::run(ws, &a),
+        Cmd::Eval(a) => eval::run(ws, &store, &a),
+        Cmd::Recipes { cmd } => recipes::run(ws, cmd),
+        Cmd::Promote(a) => promote::run(ws, &store, &a),
+        Cmd::Target { cmd } => target::run(ws, cmd),
+        Cmd::Package(a) => package::package(ws, &store, &a),
+        Cmd::VerifyArtifact(a) => package::verify_artifact(&a),
+        Cmd::Cleanup(a) => cleanup::run(ws, &a),
     }
 }

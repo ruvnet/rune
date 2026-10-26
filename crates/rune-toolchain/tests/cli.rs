@@ -178,3 +178,53 @@ fn tampered_plan_is_rejected() {
     assert_eq!(o.status.code(), Some(1));
     assert!(stderr(&o).contains("plan id mismatch"), "{}", stderr(&o));
 }
+
+#[test]
+fn build_is_model_free_and_writes_no_ledger_entries() {
+    let d = fixture();
+    // A bait credential and a black-holed proxy: if the build path touched
+    // either, it would fail or leave a ledger behind.
+    let o = Command::new(env!("CARGO_BIN_EXE_rune"))
+        .arg("-C")
+        .arg(d.path())
+        .args(["build", "--freeze"])
+        .env("OPENROUTER_API_KEY", "sk-or-bait-never-read")
+        .env("RUNE_OPENROUTER_URL", "http://127.0.0.1:9")
+        .env("https_proxy", "http://127.0.0.1:9")
+        .env("http_proxy", "http://127.0.0.1:9")
+        .output()
+        .unwrap();
+    assert!(o.status.success(), "{}", stderr(&o));
+    assert!(!d.path().join(".rune/ledger").exists(), "no ledger writes");
+    assert!(!d.path().join(".rune/memory").exists());
+    let r = rune(d.path(), &["build"]);
+    assert!(r.status.success(), "{}", stderr(&r));
+    assert!(!d.path().join(".rune/ledger").exists());
+    // The build path's source mentions no credentials, network client or ledger.
+    let src = include_str!("../src/commands/build.rs");
+    for needle in ["OPENROUTER", "Ledger", "ureq", "env::var"] {
+        assert!(
+            !src.contains(needle),
+            "build.rs must not reference {needle}"
+        );
+    }
+}
+
+#[test]
+fn build_registers_its_artifact_with_ownership_and_releases_its_lease() {
+    let d = fixture();
+    let o = rune(d.path(), &["build", "--freeze"]);
+    let digest = digest_of(&stdout(&o));
+    let m: serde_json::Value =
+        serde_json::from_slice(&fs::read(d.path().join(".rune/ownership.json")).unwrap()).unwrap();
+    assert_eq!(m["entries"][&digest]["kind"], "artifact");
+    assert!(d.path().join(".rune/objects").join(&digest).exists());
+    let leases = d.path().join(".rune/leases");
+    assert!(
+        !leases.exists() || fs::read_dir(leases).unwrap().next().is_none(),
+        "the build lease is released"
+    );
+    // The receipt makes it reachable, so cleanup proposes nothing.
+    let c = rune(d.path(), &["cleanup"]);
+    assert!(stdout(&c).contains("0 unreachable"), "{}", stdout(&c));
+}
