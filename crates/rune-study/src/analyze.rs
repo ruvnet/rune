@@ -389,13 +389,30 @@ pub fn analyze(study_dir: &Path) -> R<()> {
             pairs: pairs.clone(),
         }),
     )?;
+    let mut explore = String::new();
+    for k in [1usize, 2] {
+        let mut s = study.clone();
+        s.k = k;
+        let r = s.run(&ranker).map_err(|e| e.to_string())?;
+        explore += &format!(
+            "| {k} | {:?} | {:.1}% [{:.1}%, {:.1}%] | {:.1}% [{:.1}%, {:.1}%] | {:.4} |\n",
+            r.verdict,
+            100.0 * r.retrieval_hit_rate,
+            100.0 * r.retrieval_wilson95.0,
+            100.0 * r.retrieval_wilson95.1,
+            100.0 * r.random_hit_rate,
+            100.0 * r.random_wilson95.0,
+            100.0 * r.random_wilson95.1,
+            r.p_value
+        );
+    }
     let n_borderline = pairs.iter().filter(|p| p.borderline()).count();
     let n_unconfirmed = pairs
         .iter()
         .filter(|p| p.borderline() && !p.final_accept())
         .count();
     let md = format!(
-        "{}\n{}\n### Sensitivity (not the preregistered analysis)\n\nUsing first-run outcomes without the confirmation re-runs ({n_borderline} borderline Accepts, {n_unconfirmed} not confirmed): verdict {:?}, retrieval {:.1}% vs random {:.1}%, p = {:.4}.\n\n## Outcome matrix\n\n{}\nCompiler: {compiler}. Ranker: HashedFeatureRanker. Evaluations in matrix: {}.\n",
+        "{}\n{}\n### Exploratory, post hoc (NOT preregistered; cannot change the verdict)\n\nThe preregistered k = 3 equals the library size, so both arms evaluate the whole library and are identical by construction. Smaller budgets on the same outcomes:\n\n| k | verdict | retrieval hit@k (Wilson 95%) | random hit@k (Wilson 95%) | p |\n|---|---|---|---|---|\n{explore}\n### Sensitivity (not the preregistered analysis)\n\nUsing first-run outcomes without the confirmation re-runs ({n_borderline} borderline Accepts, {n_unconfirmed} not confirmed): verdict {:?}, retrieval {:.1}% vs random {:.1}%, p = {:.4}.\n\n## Outcome matrix\n\n{}\nCompiler: {compiler}. Ranker: HashedFeatureRanker. Evaluations in matrix: {}.\n",
         report.render_markdown(),
         stats_md(&m, &pairs, &study, &infos),
         report_first.verdict,
