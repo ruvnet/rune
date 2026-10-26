@@ -122,7 +122,7 @@ Implemented and tested: everything in the tables above. Not done, and not claime
 
 - **MetaHarness and AgenticOW.** Neither is integrated. MetaHarness exposes no performance-evaluation API, and AgenticOW is a copy-on-write vector store for agent memory, not a workspace sandbox. Rune ships its own evaluator and workspace behind an `Evaluator` trait so an adapter can be added.
 - **RuVector ranking.** An optional `ruvector` feature ranks with `ruvector-core` HNSW. It is off by default because that dependency tree needs Rust 1.89.
-- **Learning claim.** Whether retrieval beats an equal-budget random control is a measured question; see the control-study result when published, and treat "learning helps" as unproven until it says so.
+- **Learning claim.** Not demonstrated. A preregistered control study (34 kernels, 8 recipes, 111 real evaluations) returned `Insufficient`: the learned library held 3 recipes, equal to the budget, so retrieval and random choice evaluated the same recipes. Treat "learning helps" as unproven; `study/RESULT.md` has the numbers and the next-step design.
 - **Real hardware.** No aarch64 hardware was available; aarch64 and WASM results are emulator or foreign-runtime correctness evidence.
 - **Release gate.** The target gate (an unchanged workspace builds, a real kernel improves at least 10% under the independent gate, replay works with agents disabled) is met on a fixture crate, not on a large real-world workspace with dependencies and build scripts. Byte-identical rebuilds were shown on the fixture only.
 - **Compiler integration.** Rune reuses rustc and Cargo. MIR passes and a compiler fork are out of scope.
