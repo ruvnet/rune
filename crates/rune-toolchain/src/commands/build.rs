@@ -1,6 +1,11 @@
+//! `rune build` / `rune verify`. Model-free by construction: no network, no
+//! ledger, no credentials. A successful build registers its artifact with the
+//! ownership manifest so `rune cleanup` can reason about it.
+
 use super::{Budget, Failure};
 use rune_cargo as cargo;
 use rune_core::{tree_digest, Error, Plan, Receipt, Store};
+use rune_gc::{leases, put_object, Kind};
 use std::path::Path;
 
 fn observe(ws: &Path) -> Result<(String, String, String), Error> {
@@ -44,15 +49,37 @@ pub(super) fn build(
             .file_name()
             .map(|n| n.to_string_lossy().into_owned())
             .unwrap_or_default(),
-        artifact_digest: art.digest,
+        artifact_digest: art.digest.clone(),
         offline: true,
         model_calls: 0,
     };
-    store.record(&receipt)?;
+    register(ws, store, &receipt, &art.path)?;
     println!(
         "built {} sha256:{}",
         receipt.artifact, receipt.artifact_digest
     );
+    Ok(())
+}
+
+/// Own the artifact (content-addressed under `.rune/objects`), hold a lease on
+/// it until the receipt that makes it reachable is written, then release.
+fn register(ws: &Path, store: &Store, receipt: &Receipt, artifact: &Path) -> Result<(), Failure> {
+    let job = format!("build-{}", std::process::id());
+    leases::acquire(ws, &job, std::slice::from_ref(&receipt.artifact_digest))?;
+    let result = (|| -> Result<(), Failure> {
+        let bytes = std::fs::read(artifact)?;
+        let key = put_object(ws, Kind::Artifact, &receipt.plan_id, None, &bytes)?;
+        if key != receipt.artifact_digest {
+            return Err(Failure::Other(
+                "artifact changed between build and registration".into(),
+            ));
+        }
+        store.record(receipt)?;
+        Ok(())
+    })();
+    let released = leases::release(ws, &job);
+    result?;
+    released?;
     Ok(())
 }
 
@@ -78,26 +105,4 @@ pub(super) fn verify(ws: &Path, store: &Store) -> Result<(), Failure> {
             receipt.artifact_digest, art.digest
         )))
     }
-}
-
-pub(super) fn explain(store: &Store) -> Result<(), Failure> {
-    let mut next = store.current_id()?;
-    if next.is_none() {
-        return Err(Failure::Other("no approved plan".into()));
-    }
-    while let Some(id) = next {
-        let plan = store.load(&id)?;
-        println!("plan {id}\n  target     {}\n  source     {}\n  lockfile   {}\n  budget     ${} / {} tokens / {}s / {}MB",
-            plan.target, plan.source_digest, plan.lock_digest,
-            plan.policy.max_usd, plan.policy.max_tokens, plan.policy.max_seconds, plan.policy.max_memory_mb);
-        match store.receipt(&id)? {
-            Some(r) => println!(
-                "  evidence   {} sha256:{} (offline={}, model calls={})",
-                r.artifact, r.artifact_digest, r.offline, r.model_calls
-            ),
-            None => println!("  evidence   none"),
-        }
-        next = plan.parent;
-    }
-    Ok(())
 }

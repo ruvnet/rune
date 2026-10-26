@@ -3,7 +3,7 @@
 mod commands;
 mod propose;
 
-use clap::{Parser, Subcommand};
+use clap::Parser;
 use std::path::PathBuf;
 use std::process::ExitCode;
 
@@ -14,57 +14,12 @@ struct Cli {
     #[arg(long, short = 'C', default_value = ".", global = true)]
     workspace: PathBuf,
     #[command(subcommand)]
-    cmd: Cmd,
-}
-
-#[derive(Subcommand)]
-enum Cmd {
-    /// Replay the approved plan with no model call; --freeze approves a new plan first
-    Build {
-        #[arg(long)]
-        freeze: bool,
-        #[command(flatten)]
-        budget: commands::Budget,
-    },
-    /// Explore candidate improvements within an explicit budget (never applies code)
-    Improve {
-        #[command(flatten)]
-        budget: commands::Budget,
-        /// Campaign id for the cost ledger (default: derived from the approved plan id)
-        #[arg(long)]
-        campaign: Option<String>,
-        /// Compare ledger totals with provider-reported totals instead of requesting
-        #[arg(long)]
-        reconcile: bool,
-    },
-    /// Rebuild independently and compare against the recorded artifact digest
-    Verify,
-    /// Show the approved plan, its lineage and evidence
-    Explain,
-    /// Restore the previous approved plan
-    Rollback,
+    cmd: commands::Cmd,
 }
 
 fn main() -> ExitCode {
     let cli = Cli::parse();
-    match commands::run(
-        &cli.workspace,
-        match cli.cmd {
-            Cmd::Build { freeze, budget } => commands::Op::Build { freeze, budget },
-            Cmd::Improve {
-                budget,
-                campaign,
-                reconcile,
-            } => commands::Op::Improve {
-                budget,
-                campaign,
-                reconcile,
-            },
-            Cmd::Verify => commands::Op::Verify,
-            Cmd::Explain => commands::Op::Explain,
-            Cmd::Rollback => commands::Op::Rollback,
-        },
-    ) {
+    match commands::run(&cli.workspace, cli.cmd) {
         Ok(()) => ExitCode::SUCCESS,
         Err(commands::Failure::MissingCredentials(m)) => {
             eprintln!("rune: {m}");
