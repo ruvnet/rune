@@ -138,6 +138,7 @@ Implemented and tested: everything in the tables above. Not done, and not claime
 * [ADR 007: Isolation and safe cleanup](docs/adr/007-isolation-retention.md)
 * [ADR 008: Delivery gates and economic acceptance](docs/adr/008-delivery-economics.md)
 * [ADR 009: Rune identity and visual language](docs/adr/009-rune-identity.md)
+* [ADR 010: rGi as an optional campaign supervisor](docs/adr/010-rgi-supervisor.md)
 
 [Validation receipts and source provenance](docs/VALIDATION.md)
 
