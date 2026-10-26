@@ -1,65 +1,7 @@
-use clap::Args;
+use super::{Budget, Failure};
 use rune_cargo as cargo;
-use rune_core::{tree_digest, Error, Plan, Policy, Receipt, Store};
+use rune_core::{tree_digest, Error, Plan, Receipt, Store};
 use std::path::Path;
-
-#[derive(Args, Clone)]
-pub struct Budget {
-    /// Maximum reasoning spend in USD
-    #[arg(long, default_value_t = 2.0)]
-    pub max_usd: f64,
-    #[arg(long, default_value_t = 200_000)]
-    pub max_tokens: u64,
-    #[arg(long, default_value_t = 600)]
-    pub max_seconds: u64,
-    #[arg(long, default_value_t = 64)]
-    pub max_memory_mb: u64,
-}
-
-impl Budget {
-    fn policy(&self) -> Policy {
-        Policy {
-            max_usd: self.max_usd,
-            max_tokens: self.max_tokens,
-            max_seconds: self.max_seconds,
-            max_memory_mb: self.max_memory_mb,
-        }
-    }
-}
-
-pub enum Op {
-    Build { freeze: bool, budget: Budget },
-    Improve { budget: Budget },
-    Verify,
-    Explain,
-    Rollback,
-}
-
-pub enum Failure {
-    MissingCredentials(String),
-    Other(String),
-}
-
-impl From<Error> for Failure {
-    fn from(e: Error) -> Self {
-        Failure::Other(e.to_string())
-    }
-}
-
-pub fn run(ws: &Path, op: Op) -> Result<(), Failure> {
-    let store = Store::open(ws);
-    match op {
-        Op::Build { freeze, budget } => build(ws, &store, freeze, &budget),
-        Op::Improve { budget } => improve(&budget),
-        Op::Verify => verify(ws, &store),
-        Op::Explain => explain(&store),
-        Op::Rollback => {
-            let id = store.rollback()?;
-            println!("rolled back; current plan {id}");
-            Ok(())
-        }
-    }
-}
 
 fn observe(ws: &Path) -> Result<(String, String, String), Error> {
     Ok((
@@ -69,7 +11,12 @@ fn observe(ws: &Path) -> Result<(String, String, String), Error> {
     ))
 }
 
-fn build(ws: &Path, store: &Store, freeze: bool, budget: &Budget) -> Result<(), Failure> {
+pub(super) fn build(
+    ws: &Path,
+    store: &Store,
+    freeze: bool,
+    budget: &Budget,
+) -> Result<(), Failure> {
     let (src, lock, tc) = observe(ws)?;
     if freeze {
         let parent = store.current_id()?;
@@ -109,7 +56,7 @@ fn build(ws: &Path, store: &Store, freeze: bool, budget: &Budget) -> Result<(), 
     Ok(())
 }
 
-fn verify(ws: &Path, store: &Store) -> Result<(), Failure> {
+pub(super) fn verify(ws: &Path, store: &Store) -> Result<(), Failure> {
     let plan = store.current()?;
     let id = plan.id();
     let (src, lock, tc) = observe(ws)?;
@@ -133,7 +80,7 @@ fn verify(ws: &Path, store: &Store) -> Result<(), Failure> {
     }
 }
 
-fn explain(store: &Store) -> Result<(), Failure> {
+pub(super) fn explain(store: &Store) -> Result<(), Failure> {
     let mut next = store.current_id()?;
     if next.is_none() {
         return Err(Failure::Other("no approved plan".into()));
@@ -153,23 +100,4 @@ fn explain(store: &Store) -> Result<(), Failure> {
         next = plan.parent;
     }
     Ok(())
-}
-
-fn improve(budget: &Budget) -> Result<(), Failure> {
-    budget.policy().validate()?;
-    let key = std::env::var("OPENROUTER_API_KEY").unwrap_or_default();
-    if key.is_empty() {
-        return Err(Failure::MissingCredentials(
-            "OPENROUTER_API_KEY is not set; no request was made".into(),
-        ));
-    }
-    match crate::propose::run(&key, budget.max_tokens, budget.max_seconds) {
-        Ok(report) => {
-            println!("{report}");
-            Ok(())
-        }
-        Err(()) => Err(Failure::Other(
-            "provider or schema failure; nothing was applied".into(),
-        )),
-    }
 }

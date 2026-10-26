@@ -113,7 +113,9 @@ impl EditApplier for AgentBoosterSidecar {
         let payload = json!({"code": file.text, "edit": req.find, "language": req.language});
         let payload = serde_json::to_vec(&payload).map_err(Error::from)?;
         // JSON escaping can expand text up to 6x; add slack for the envelope.
-        let cap = (req.max_bytes as usize).saturating_mul(6).saturating_add(4096);
+        let cap = (req.max_bytes as usize)
+            .saturating_mul(6)
+            .saturating_add(4096);
         let raw = self.run(payload, cap).map_err(|e| fail(&e))?;
         let v: Value = serde_json::from_slice(&raw).map_err(|_| fail("malformed result"))?;
         if v["success"] != Value::Bool(true) {

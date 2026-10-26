@@ -54,7 +54,10 @@ fn exact_output_equals_expected_text() {
     assert_eq!(o.before_sha256, hex_sha256(SRC.as_bytes()));
     assert_eq!(o.after_sha256, hex_sha256(EDIT.as_bytes()));
     assert_eq!(o.applier, "exact_replace");
-    assert!(fs::read_dir(d.path().join("src")).unwrap().count() == 1, "no temp left");
+    assert!(
+        fs::read_dir(d.path().join("src")).unwrap().count() == 1,
+        "no temp left"
+    );
 }
 
 #[test]
@@ -71,9 +74,15 @@ fn exact_stale_hash_rejected_file_unchanged() {
 fn exact_find_must_occur_exactly_once() {
     let src = "a a\n";
     let d = tree(src);
-    assert!(ExactReplace.apply(&req(d.path(), "src/lib.rs", src, "a", "b")).is_err());
-    assert!(ExactReplace.apply(&req(d.path(), "src/lib.rs", src, "zzz", "b")).is_err());
-    assert!(ExactReplace.apply(&req(d.path(), "src/lib.rs", src, "", "b")).is_err());
+    assert!(ExactReplace
+        .apply(&req(d.path(), "src/lib.rs", src, "a", "b"))
+        .is_err());
+    assert!(ExactReplace
+        .apply(&req(d.path(), "src/lib.rs", src, "zzz", "b"))
+        .is_err());
+    assert!(ExactReplace
+        .apply(&req(d.path(), "src/lib.rs", src, "", "b"))
+        .is_err());
     assert_eq!(bytes(&d), src.as_bytes());
 }
 
@@ -84,12 +93,23 @@ fn traversal_and_absolute_rejected() {
     fs::create_dir_all(&root).unwrap();
     fs::write(outer.path().join("secret.rs"), SRC).unwrap();
     let abs = outer.path().join("secret.rs");
-    for p in ["../secret.rs", "src/../../secret.rs", abs.to_str().unwrap(), ""] {
+    for p in [
+        "../secret.rs",
+        "src/../../secret.rs",
+        abs.to_str().unwrap(),
+        "",
+    ] {
         let r = req(&root, p, SRC, "fn add", "fn sum");
         assert!(ExactReplace.apply(&r).is_err(), "{p}");
-        assert!(AgentBoosterSidecar::new("/nonexistent").apply(&r).is_err(), "{p}");
+        assert!(
+            AgentBoosterSidecar::new("/nonexistent").apply(&r).is_err(),
+            "{p}"
+        );
     }
-    assert_eq!(fs::read(outer.path().join("secret.rs")).unwrap(), SRC.as_bytes());
+    assert_eq!(
+        fs::read(outer.path().join("secret.rs")).unwrap(),
+        SRC.as_bytes()
+    );
 }
 
 #[cfg(unix)]
@@ -141,13 +161,34 @@ fn unusable_sidecar_results_never_enter_the_tree() {
     let cases = [
         ("garbage", "cat >/dev/null; echo 'not json'"),
         ("empty stdout", "cat >/dev/null"),
-        ("success false", r#"cat >/dev/null; echo '{"success":false,"output":"X"}'"#),
-        ("empty output", r#"cat >/dev/null; echo '{"success":true,"output":""}'"#),
-        ("null output", r#"cat >/dev/null; echo '{"success":true,"output":null}'"#),
-        ("code not output", r#"cat >/dev/null; echo '{"success":true,"code":"X"}'"#),
-        ("success string", r#"cat >/dev/null; echo '{"success":"true","output":"X"}'"#),
-        ("oversize", r#"cat >/dev/null; echo '{"success":true,"output":"0123456789012345678901234567890123456789"}'"#),
-        ("nonzero exit", r#"cat >/dev/null; echo '{"success":true,"output":"X"}'; exit 3"#),
+        (
+            "success false",
+            r#"cat >/dev/null; echo '{"success":false,"output":"X"}'"#,
+        ),
+        (
+            "empty output",
+            r#"cat >/dev/null; echo '{"success":true,"output":""}'"#,
+        ),
+        (
+            "null output",
+            r#"cat >/dev/null; echo '{"success":true,"output":null}'"#,
+        ),
+        (
+            "code not output",
+            r#"cat >/dev/null; echo '{"success":true,"code":"X"}'"#,
+        ),
+        (
+            "success string",
+            r#"cat >/dev/null; echo '{"success":"true","output":"X"}'"#,
+        ),
+        (
+            "oversize",
+            r#"cat >/dev/null; echo '{"success":true,"output":"0123456789012345678901234567890123456789"}'"#,
+        ),
+        (
+            "nonzero exit",
+            r#"cat >/dev/null; echo '{"success":true,"output":"X"}'; exit 3"#,
+        ),
     ];
     for (i, (label, body)) in cases.iter().enumerate() {
         let sub = bins.path().join(i.to_string());
@@ -170,7 +211,10 @@ fn unusable_sidecar_results_never_enter_the_tree() {
 fn stale_hash_rejected_before_sidecar_is_spawned() {
     let bins = tempfile::tempdir().unwrap();
     let marker = bins.path().join("spawned");
-    let node = fake_node(bins.path(), &format!("touch {}; cat >/dev/null", marker.display()));
+    let node = fake_node(
+        bins.path(),
+        &format!("touch {}; cat >/dev/null", marker.display()),
+    );
     let d = tree(SRC);
     let mut r = req(d.path(), "src/lib.rs", SRC, EDIT, "");
     r.expected_sha256 = hex_sha256(b"stale");
@@ -212,7 +256,10 @@ fn fake_success_is_applied_with_confidence() {
     );
     let d = tree(SRC);
     let r = req(d.path(), "src/lib.rs", SRC, EDIT, "");
-    let o = AgentBoosterSidecar::new("/nonexistent").with_node(node).apply(&r).unwrap();
+    let o = AgentBoosterSidecar::new("/nonexistent")
+        .with_node(node)
+        .apply(&r)
+        .unwrap();
     assert_eq!(bytes(&d), b"fn x() {}");
     assert_eq!(o.confidence, Some(0.5));
 }

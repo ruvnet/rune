@@ -30,6 +30,12 @@ enum Cmd {
     Improve {
         #[command(flatten)]
         budget: commands::Budget,
+        /// Campaign id for the cost ledger (default: derived from the approved plan id)
+        #[arg(long)]
+        campaign: Option<String>,
+        /// Compare ledger totals with provider-reported totals instead of requesting
+        #[arg(long)]
+        reconcile: bool,
     },
     /// Rebuild independently and compare against the recorded artifact digest
     Verify,
@@ -45,7 +51,15 @@ fn main() -> ExitCode {
         &cli.workspace,
         match cli.cmd {
             Cmd::Build { freeze, budget } => commands::Op::Build { freeze, budget },
-            Cmd::Improve { budget } => commands::Op::Improve { budget },
+            Cmd::Improve {
+                budget,
+                campaign,
+                reconcile,
+            } => commands::Op::Improve {
+                budget,
+                campaign,
+                reconcile,
+            },
             Cmd::Verify => commands::Op::Verify,
             Cmd::Explain => commands::Op::Explain,
             Cmd::Rollback => commands::Op::Rollback,
