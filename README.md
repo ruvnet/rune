@@ -69,7 +69,7 @@ These come from tests in this repository, run on one x86_64 Linux machine with a
 | Fixture kernel (squared Euclidean distance over `f32`, 8 independent accumulators) | 3.51x geometric-mean speedup, 95% CI [3.511, 3.513], 40 interleaved pairs after 5 warmups, pinned to one core, load 1.66 on 32 CPUs |
 | Candidate that drops the final partial chunk | Passes the visible tests, rejected by the hidden holdout (length 7) |
 | Faster candidates that add `unsafe`, `std::net` or a dependency | Rejected by static gates before any of their code is built |
-| Marginal candidate (mean 1.083x) | Rejected: lower CI bound under the 1.10 threshold |
+| Marginal candidate | Decided by the CI lower bound, so it depends on the CPU: 1.083x and rejected on the development machine, 1.117x (CI [1.101, 1.132]) and accepted on a GitHub runner |
 | Recipe selection over 10,000 synthetic recipes | p95 0.77 ms (target: under 10 ms) |
 | One live `rune improve` call (`moonshotai/kimi-k3.1-pro`) | $0.0119, 1,325 tokens, ledger reconciled |
 
