@@ -1,0 +1,2949 @@
+{
+  "compiler": "rustc 1.98.1 (48a229cea 2026-09-01)",
+  "recipes": [
+    {
+      "id": "unroll4",
+      "descriptor": "multi-accumulator unrolling, 4 lanes via chunks_exact with scalar tail",
+      "applicability": "kernel is a scalar reduction (Shape::Reduce)",
+      "origin": "f32_sqdist",
+      "origin_ci95_low": 4.531129034651399
+    },
+    {
+      "id": "unroll8",
+      "descriptor": "multi-accumulator unrolling, 8 lanes via chunks_exact with scalar tail",
+      "applicability": "kernel is a scalar reduction (Shape::Reduce)",
+      "origin": "f32_sqdist",
+      "origin_ci95_low": 7.209948762188997
+    },
+    {
+      "id": "iter-fold",
+      "descriptor": "rewrite an indexed loop as an iterator zip/fold",
+      "applicability": "kernel is a scalar reduction whose baseline loop style is indexed",
+      "origin": null,
+      "origin_ci95_low": null
+    },
+    {
+      "id": "bounds-hoist",
+      "descriptor": "hoist slice bounds: re-slice inputs to one length before an indexed loop",
+      "applicability": "kernel is a scalar reduction whose baseline loop style is indexed",
+      "origin": null,
+      "origin_ci95_low": null
+    },
+    {
+      "id": "branchless",
+      "descriptor": "replace a data-dependent branch with a select (count: += cond as u64; extremum: .max/.min)",
+      "applicability": "scalar reduction whose combine is max, min or conditional count",
+      "origin": null,
+      "origin_ci95_low": null
+    },
+    {
+      "id": "swar-u64",
+      "descriptor": "word-at-a-time (u64 SWAR) processing of byte slices with scalar tail",
+      "applicability": "u8 kernel with op in {sum, count_eq, hamming, find_first}",
+      "origin": null,
+      "origin_ci95_low": null
+    },
+    {
+      "id": "table",
+      "descriptor": "lookup table: 256-entry const class table (predicate counts) or 4 sub-histograms (byte histogram)",
+      "applicability": "u8 kernel with op in {count_digit, count_vowel, count_space, hist}",
+      "origin": "u8_count_vowel",
+      "origin_ci95_low": 2.0907796971182786
+    },
+    {
+      "id": "fused-pass",
+      "descriptor": "fuse a two-pass min-then-position scan into one pass tracking value and index",
+      "applicability": "op is argmin",
+      "origin": null,
+      "origin_ci95_low": null
+    }
+  ],
+  "pairs": [
+    {
+      "workload": "f32_sum",
+      "recipe": "unroll4",
+      "first": {
+        "outcome": "guard_regression",
+        "detail": "len7: speed-ratio 95% CI lower bound 0.6039 is below the non-inferiority floor 0.9000 (geo-mean 0.6061, CI [0.6039, 0.6083], n=40)",
+        "samples": 40,
+        "geo_mean_speedup": 4.790649287386814,
+        "ci95_low": 4.771052748821767,
+        "ci95_high": 4.810326316431415,
+        "pinned_core": 18,
+        "load_before": 3.62,
+        "load_after": 4.5,
+        "guards": [
+          [
+            "len7",
+            0.6038584686137081
+          ],
+          [
+            "len1000003",
+            3.970310111238587
+          ]
+        ]
+      },
+      "rerun": null
+    },
+    {
+      "workload": "f32_sum",
+      "recipe": "unroll8",
+      "first": {
+        "outcome": "guard_regression",
+        "detail": "len7: speed-ratio 95% CI lower bound 0.5396 is below the non-inferiority floor 0.9000 (geo-mean 0.5439, CI [0.5396, 0.5483], n=40)",
+        "samples": 40,
+        "geo_mean_speedup": 8.336254123459325,
+        "ci95_low": 8.324025941344791,
+        "ci95_high": 8.34850026904957,
+        "pinned_core": 19,
+        "load_before": 3.62,
+        "load_after": 4.5,
+        "guards": [
+          [
+            "len7",
+            0.5395847818656017
+          ],
+          [
+            "len1000003",
+            7.747012622088816
+          ]
+        ]
+      },
+      "rerun": null
+    },
+    {
+      "workload": "f32_sum",
+      "recipe": "iter-fold",
+      "first": {
+        "outcome": "insufficient_improvement",
+        "detail": "primary: speedup 95% CI lower bound 0.9946 does not exceed 1.1000 (geo-mean 0.9962, CI [0.9946, 0.9979], n=40)",
+        "samples": 40,
+        "geo_mean_speedup": 0.9962488586726334,
+        "ci95_low": 0.9946424868560904,
+        "ci95_high": 0.997857824818744,
+        "pinned_core": 20,
+        "load_before": 3.62,
+        "load_after": 4.5,
+        "guards": [
+          [
+            "len7",
+            0.6667084947064986
+          ],
+          [
+            "len1000003",
+            0.9933944218648052
+          ]
+        ]
+      },
+      "rerun": null
+    },
+    {
+      "workload": "f32_sum",
+      "recipe": "bounds-hoist",
+      "first": {
+        "outcome": "insufficient_improvement",
+        "detail": "primary: speedup 95% CI lower bound 0.9944 does not exceed 1.1000 (geo-mean 0.9960, CI [0.9944, 0.9976], n=40)",
+        "samples": 40,
+        "geo_mean_speedup": 0.9959880309936948,
+        "ci95_low": 0.9944014918757412,
+        "ci95_high": 0.9975771013894004,
+        "pinned_core": 21,
+        "load_before": 3.62,
+        "load_after": 4.5,
+        "guards": [
+          [
+            "len7",
+            0.6672920918440997
+          ],
+          [
+            "len1000003",
+            0.992889057053072
+          ]
+        ]
+      },
+      "rerun": null
+    },
+    {
+      "workload": "f32_dot",
+      "recipe": "unroll4",
+      "first": {
+        "outcome": "accept",
+        "detail": "",
+        "samples": 40,
+        "geo_mean_speedup": 4.699702922174051,
+        "ci95_low": 4.691197687338417,
+        "ci95_high": 4.70822357716983,
+        "pinned_core": 19,
+        "load_before": 4.5,
+        "load_after": 4.62,
+        "guards": [
+          [
+            "len7",
+            1.1265037202783394
+          ],
+          [
+            "len1000003",
+            3.600080132595754
+          ]
+        ]
+      },
+      "rerun": null
+    },
+    {
+      "workload": "f32_dot",
+      "recipe": "unroll8",
+      "first": {
+        "outcome": "accept",
+        "detail": "",
+        "samples": 40,
+        "geo_mean_speedup": 7.351741872213554,
+        "ci95_low": 7.330558111656043,
+        "ci95_high": 7.372986849353012,
+        "pinned_core": 4,
+        "load_before": 4.5,
+        "load_after": 4.62,
+        "guards": [
+          [
+            "len7",
+            0.9875051245079433
+          ],
+          [
+            "len1000003",
+            5.464912568381046
+          ]
+        ]
+      },
+      "rerun": null
+    },
+    {
+      "workload": "f32_dot",
+      "recipe": "iter-fold",
+      "first": {
+        "outcome": "insufficient_improvement",
+        "detail": "primary: speedup 95% CI lower bound 0.9948 does not exceed 1.1000 (geo-mean 0.9973, CI [0.9948, 0.9999], n=40)",
+        "samples": 40,
+        "geo_mean_speedup": 0.9973147939925426,
+        "ci95_low": 0.9947850225109764,
+        "ci95_high": 0.9998509987673372,
+        "pinned_core": 21,
+        "load_before": 4.5,
+        "load_after": 4.62,
+        "guards": [
+          [
+            "len7",
+            0.979090897871822
+          ],
+          [
+            "len1000003",
+            0.9965540656173466
+          ]
+        ]
+      },
+      "rerun": null
+    },
+    {
+      "workload": "f32_dot",
+      "recipe": "bounds-hoist",
+      "first": {
+        "outcome": "insufficient_improvement",
+        "detail": "primary: speedup 95% CI lower bound 0.9950 does not exceed 1.1000 (geo-mean 0.9972, CI [0.9950, 0.9995], n=40)",
+        "samples": 40,
+        "geo_mean_speedup": 0.997222783580596,
+        "ci95_low": 0.994996358947388,
+        "ci95_high": 0.9994541901080618,
+        "pinned_core": 2,
+        "load_before": 4.5,
+        "load_after": 4.62,
+        "guards": [
+          [
+            "len7",
+            0.99588801556174
+          ],
+          [
+            "len1000003",
+            0.995817788106143
+          ]
+        ]
+      },
+      "rerun": null
+    },
+    {
+      "workload": "f32_sqdist",
+      "recipe": "unroll4",
+      "first": {
+        "outcome": "accept",
+        "detail": "",
+        "samples": 40,
+        "geo_mean_speedup": 4.550368157642616,
+        "ci95_low": 4.531129034651399,
+        "ci95_high": 4.569688969733977,
+        "pinned_core": 4,
+        "load_before": 4.62,
+        "load_after": 4.78,
+        "guards": [
+          [
+            "len7",
+            1.3295406333542226
+          ],
+          [
+            "len1000003",
+            3.494292129684343
+          ]
+        ]
+      },
+      "rerun": null
+    },
+    {
+      "workload": "f32_sqdist",
+      "recipe": "unroll8",
+      "first": {
+        "outcome": "accept",
+        "detail": "",
+        "samples": 40,
+        "geo_mean_speedup": 7.262159426378751,
+        "ci95_low": 7.209948762188997,
+        "ci95_high": 7.314748172791423,
+        "pinned_core": 5,
+        "load_before": 4.62,
+        "load_after": 4.78,
+        "guards": [
+          [
+            "len7",
+            1.016247647025142
+          ],
+          [
+            "len1000003",
+            5.173046689131853
+          ]
+        ]
+      },
+      "rerun": null
+    },
+    {
+      "workload": "f32_l1",
+      "recipe": "unroll4",
+      "first": {
+        "outcome": "accept",
+        "detail": "",
+        "samples": 40,
+        "geo_mean_speedup": 4.552649546434272,
+        "ci95_low": 4.527147774336233,
+        "ci95_high": 4.57829497197871,
+        "pinned_core": 18,
+        "load_before": 4.62,
+        "load_after": 4.8,
+        "guards": [
+          [
+            "len7",
+            1.1978672979897371
+          ],
+          [
+            "len1000003",
+            3.5382017582806724
+          ]
+        ]
+      },
+      "rerun": null
+    },
+    {
+      "workload": "f32_l1",
+      "recipe": "unroll8",
+      "first": {
+        "outcome": "guard_regression",
+        "detail": "len7: speed-ratio 95% CI lower bound 0.8066 is below the non-inferiority floor 0.9000 (geo-mean 0.8109, CI [0.8066, 0.8152], n=40)",
+        "samples": 40,
+        "geo_mean_speedup": 7.242728660523944,
+        "ci95_low": 7.21626711865744,
+        "ci95_high": 7.269287234995594,
+        "pinned_core": 3,
+        "load_before": 4.62,
+        "load_after": 4.78,
+        "guards": [
+          [
+            "len7",
+            0.8066048112434137
+          ],
+          [
+            "len1000003",
+            5.209009559004996
+          ]
+        ]
+      },
+      "rerun": null
+    },
+    {
+      "workload": "f32_l1",
+      "recipe": "iter-fold",
+      "first": {
+        "outcome": "insufficient_improvement",
+        "detail": "primary: speedup 95% CI lower bound 1.0038 does not exceed 1.1000 (geo-mean 1.0059, CI [1.0038, 1.0080], n=40)",
+        "samples": 40,
+        "geo_mean_speedup": 1.005896829377609,
+        "ci95_low": 1.0038312637660411,
+        "ci95_high": 1.0079666452665386,
+        "pinned_core": 21,
+        "load_before": 4.78,
+        "load_after": 5.22,
+        "guards": [
+          [
+            "len7",
+            0.9777392470292036
+          ],
+          [
+            "len1000003",
+            1.0073495462800113
+          ]
+        ]
+      },
+      "rerun": null
+    },
+    {
+      "workload": "f32_l1",
+      "recipe": "bounds-hoist",
+      "first": {
+        "outcome": "insufficient_improvement",
+        "detail": "primary: speedup 95% CI lower bound 0.9987 does not exceed 1.1000 (geo-mean 0.9996, CI [0.9987, 1.0004], n=40)",
+        "samples": 40,
+        "geo_mean_speedup": 0.9995749771108688,
+        "ci95_low": 0.9987136558417432,
+        "ci95_high": 1.0004370412098578,
+        "pinned_core": 4,
+        "load_before": 4.78,
+        "load_after": 5.22,
+        "guards": [
+          [
+            "len7",
+            0.9907024842943114
+          ],
+          [
+            "len1000003",
+            0.9866616178863292
+          ]
+        ]
+      },
+      "rerun": null
+    },
+    {
+      "workload": "f32_sumsq",
+      "recipe": "unroll4",
+      "first": {
+        "outcome": "guard_regression",
+        "detail": "len7: speed-ratio 95% CI lower bound 0.6292 is below the non-inferiority floor 0.9000 (geo-mean 0.6311, CI [0.6292, 0.6330], n=40)",
+        "samples": 40,
+        "geo_mean_speedup": 4.77215990858228,
+        "ci95_low": 4.758816916486923,
+        "ci95_high": 4.785540312379154,
+        "pinned_core": 3,
+        "load_before": 4.78,
+        "load_after": 5.22,
+        "guards": [
+          [
+            "len7",
+            0.6292345169885292
+          ],
+          [
+            "len1000003",
+            3.919150138721115
+          ]
+        ]
+      },
+      "rerun": null
+    },
+    {
+      "workload": "f32_sumsq",
+      "recipe": "unroll8",
+      "first": {
+        "outcome": "guard_regression",
+        "detail": "len7: speed-ratio 95% CI lower bound 0.6137 is below the non-inferiority floor 0.9000 (geo-mean 0.6192, CI [0.6137, 0.6248], n=40)",
+        "samples": 40,
+        "geo_mean_speedup": 8.175048540928953,
+        "ci95_low": 8.158378002934633,
+        "ci95_high": 8.191753142904734,
+        "pinned_core": 2,
+        "load_before": 4.8,
+        "load_after": 5.22,
+        "guards": [
+          [
+            "len7",
+            0.6136637722729048
+          ],
+          [
+            "len1000003",
+            7.617555109260525
+          ]
+        ]
+      },
+      "rerun": null
+    },
+    {
+      "workload": "f32_sumsq",
+      "recipe": "iter-fold",
+      "first": {
+        "outcome": "insufficient_improvement",
+        "detail": "primary: speedup 95% CI lower bound 0.9920 does not exceed 1.1000 (geo-mean 0.9960, CI [0.9920, 1.0000], n=40)",
+        "samples": 40,
+        "geo_mean_speedup": 0.9960136025554857,
+        "ci95_low": 0.9919955601789534,
+        "ci95_high": 1.0000479198683054,
+        "pinned_core": 21,
+        "load_before": 5.22,
+        "load_after": 5.32,
+        "guards": [
+          [
+            "len7",
+            0.9901836994784198
+          ],
+          [
+            "len1000003",
+            0.98967737021504
+          ]
+        ]
+      },
+      "rerun": null
+    },
+    {
+      "workload": "f32_sumsq",
+      "recipe": "bounds-hoist",
+      "first": {
+        "outcome": "insufficient_improvement",
+        "detail": "primary: speedup 95% CI lower bound 1.0064 does not exceed 1.1000 (geo-mean 1.0095, CI [1.0064, 1.0127], n=40)",
+        "samples": 40,
+        "geo_mean_speedup": 1.0095294465650058,
+        "ci95_low": 1.006401397970311,
+        "ci95_high": 1.012667217610435,
+        "pinned_core": 20,
+        "load_before": 5.22,
+        "load_after": 5.32,
+        "guards": [
+          [
+            "len7",
+            0.9891320509789412
+          ],
+          [
+            "len1000003",
+            0.9980688884360192
+          ]
+        ]
+      },
+      "rerun": null
+    },
+    {
+      "workload": "f32_saxpy_sum",
+      "recipe": "unroll4",
+      "first": {
+        "outcome": "accept",
+        "detail": "",
+        "samples": 40,
+        "geo_mean_speedup": 4.544490137715374,
+        "ci95_low": 4.524329107074585,
+        "ci95_high": 4.564741008672127,
+        "pinned_core": 19,
+        "load_before": 5.22,
+        "load_after": 5.32,
+        "guards": [
+          [
+            "len7",
+            1.207483566138384
+          ],
+          [
+            "len1000003",
+            3.717753319847248
+          ]
+        ]
+      },
+      "rerun": null
+    },
+    {
+      "workload": "f32_saxpy_sum",
+      "recipe": "unroll8",
+      "first": {
+        "outcome": "guard_regression",
+        "detail": "len7: speed-ratio 95% CI lower bound 0.8272 is below the non-inferiority floor 0.9000 (geo-mean 0.8308, CI [0.8272, 0.8345], n=40)",
+        "samples": 40,
+        "geo_mean_speedup": 7.2486441504467,
+        "ci95_low": 7.2243811133456575,
+        "ci95_high": 7.272988674800441,
+        "pinned_core": 2,
+        "load_before": 5.22,
+        "load_after": 5.32,
+        "guards": [
+          [
+            "len7",
+            0.8271708089962058
+          ],
+          [
+            "len1000003",
+            5.540303820679229
+          ]
+        ]
+      },
+      "rerun": null
+    },
+    {
+      "workload": "f32_saxpy_sum",
+      "recipe": "iter-fold",
+      "first": {
+        "outcome": "insufficient_improvement",
+        "detail": "primary: speedup 95% CI lower bound 1.0067 does not exceed 1.1000 (geo-mean 1.0085, CI [1.0067, 1.0103], n=40)",
+        "samples": 40,
+        "geo_mean_speedup": 1.0085129808294586,
+        "ci95_low": 1.0067094200409492,
+        "ci95_high": 1.0103197727703277,
+        "pinned_core": 21,
+        "load_before": 5.32,
+        "load_after": 5.31,
+        "guards": [
+          [
+            "len7",
+            0.9972088938403568
+          ],
+          [
+            "len1000003",
+            0.9965840562363998
+          ]
+        ]
+      },
+      "rerun": null
+    },
+    {
+      "workload": "f32_saxpy_sum",
+      "recipe": "bounds-hoist",
+      "first": {
+        "outcome": "insufficient_improvement",
+        "detail": "primary: speedup 95% CI lower bound 0.9893 does not exceed 1.1000 (geo-mean 0.9911, CI [0.9893, 0.9930], n=40)",
+        "samples": 40,
+        "geo_mean_speedup": 0.9911357369036004,
+        "ci95_low": 0.9893044536865714,
+        "ci95_high": 0.9929704099751973,
+        "pinned_core": 20,
+        "load_before": 5.32,
+        "load_after": 5.21,
+        "guards": [
+          [
+            "len7",
+            0.9972113525668737
+          ],
+          [
+            "len1000003",
+            0.9989978284018752
+          ]
+        ]
+      },
+      "rerun": null
+    },
+    {
+      "workload": "f32_maxabs",
+      "recipe": "unroll4",
+      "first": {
+        "outcome": "guard_regression",
+        "detail": "len7: speed-ratio 95% CI lower bound 0.8810 is below the non-inferiority floor 0.9000 (geo-mean 0.8862, CI [0.8810, 0.8913], n=40)",
+        "samples": 40,
+        "geo_mean_speedup": 4.778756702573274,
+        "ci95_low": 4.767538022854788,
+        "ci95_high": 4.790001781404681,
+        "pinned_core": 2,
+        "load_before": 5.32,
+        "load_after": 5.21,
+        "guards": [
+          [
+            "len7",
+            0.8810169322467668
+          ],
+          [
+            "len1000003",
+            3.968069475543498
+          ]
+        ]
+      },
+      "rerun": null
+    },
+    {
+      "workload": "f32_maxabs",
+      "recipe": "unroll8",
+      "first": {
+        "outcome": "guard_regression",
+        "detail": "len7: speed-ratio 95% CI lower bound 0.8752 is below the non-inferiority floor 0.9000 (geo-mean 0.8845, CI [0.8752, 0.8939], n=40)",
+        "samples": 40,
+        "geo_mean_speedup": 7.950114112708063,
+        "ci95_low": 7.928304041975603,
+        "ci95_high": 7.971984181036835,
+        "pinned_core": 19,
+        "load_before": 5.32,
+        "load_after": 5.21,
+        "guards": [
+          [
+            "len7",
+            0.8752247264122279
+          ],
+          [
+            "len1000003",
+            7.736829748767883
+          ]
+        ]
+      },
+      "rerun": null
+    },
+    {
+      "workload": "f32_maxabs",
+      "recipe": "branchless",
+      "first": {
+        "outcome": "guard_regression",
+        "detail": "len7: speed-ratio 95% CI lower bound 0.4249 is below the non-inferiority floor 0.9000 (geo-mean 0.4281, CI [0.4249, 0.4313], n=40)",
+        "samples": 40,
+        "geo_mean_speedup": 1.795809346570792,
+        "ci95_low": 1.7917006523338554,
+        "ci95_high": 1.799927462788075,
+        "pinned_core": 5,
+        "load_before": 5.31,
+        "load_after": 5.24,
+        "guards": [
+          [
+            "len7",
+            0.42490991117364735
+          ],
+          [
+            "len1000003",
+            1.8598556163189577
+          ]
+        ]
+      },
+      "rerun": null
+    },
+    {
+      "workload": "f32_min",
+      "recipe": "unroll4",
+      "first": {
+        "outcome": "guard_regression",
+        "detail": "len7: speed-ratio 95% CI lower bound 0.6664 is below the non-inferiority floor 0.9000 (geo-mean 0.6684, CI [0.6664, 0.6705], n=40)",
+        "samples": 40,
+        "geo_mean_speedup": 4.831361424679141,
+        "ci95_low": 4.821996058058943,
+        "ci95_high": 4.840744980881179,
+        "pinned_core": 20,
+        "load_before": 5.21,
+        "load_after": 5.24,
+        "guards": [
+          [
+            "len7",
+            0.6664288379956764
+          ],
+          [
+            "len1000003",
+            3.961190894414797
+          ]
+        ]
+      },
+      "rerun": null
+    },
+    {
+      "workload": "f32_min",
+      "recipe": "unroll8",
+      "first": {
+        "outcome": "guard_regression",
+        "detail": "len7: speed-ratio 95% CI lower bound 0.8177 is below the non-inferiority floor 0.9000 (geo-mean 0.8264, CI [0.8177, 0.8351], n=40)",
+        "samples": 40,
+        "geo_mean_speedup": 8.168835996981011,
+        "ci95_low": 8.158198810487525,
+        "ci95_high": 8.179487052925236,
+        "pinned_core": 2,
+        "load_before": 5.21,
+        "load_after": 5.3,
+        "guards": [
+          [
+            "len7",
+            0.8177431803141144
+          ],
+          [
+            "len1000003",
+            7.761727496301117
+          ]
+        ]
+      },
+      "rerun": null
+    },
+    {
+      "workload": "f32_min",
+      "recipe": "branchless",
+      "first": {
+        "outcome": "guard_regression",
+        "detail": "len7: speed-ratio 95% CI lower bound 0.3857 is below the non-inferiority floor 0.9000 (geo-mean 0.3874, CI [0.3857, 0.3890], n=40)",
+        "samples": 40,
+        "geo_mean_speedup": 1.778056223116247,
+        "ci95_low": 1.7753137889303243,
+        "ci95_high": 1.780802893705509,
+        "pinned_core": 19,
+        "load_before": 5.21,
+        "load_after": 5.3,
+        "guards": [
+          [
+            "len7",
+            0.3857094021661608
+          ],
+          [
+            "len1000003",
+            1.8522907479416937
+          ]
+        ]
+      },
+      "rerun": null
+    },
+    {
+      "workload": "f32_argmin",
+      "recipe": "fused-pass",
+      "first": {
+        "outcome": "accept",
+        "detail": "",
+        "samples": 40,
+        "geo_mean_speedup": 1.8820996651158493,
+        "ci95_low": 1.8775276477006737,
+        "ci95_high": 1.886682815972,
+        "pinned_core": 20,
+        "load_before": 5.24,
+        "load_after": 5.31,
+        "guards": [
+          [
+            "len7",
+            1.3758811749268602
+          ],
+          [
+            "len1000003",
+            1.8868480297852448
+          ]
+        ]
+      },
+      "rerun": null
+    },
+    {
+      "workload": "f64_sum",
+      "recipe": "unroll4",
+      "first": {
+        "outcome": "guard_regression",
+        "detail": "len7: speed-ratio 95% CI lower bound 0.7189 is below the non-inferiority floor 0.9000 (geo-mean 0.7270, CI [0.7189, 0.7352], n=40)",
+        "samples": 40,
+        "geo_mean_speedup": 4.019479719662782,
+        "ci95_low": 4.011179600325352,
+        "ci95_high": 4.027797013993077,
+        "pinned_core": 5,
+        "load_before": 5.24,
+        "load_after": 5.31,
+        "guards": [
+          [
+            "len7",
+            0.7189096895499492
+          ],
+          [
+            "len1000003",
+            3.5274281445189444
+          ]
+        ]
+      },
+      "rerun": null
+    },
+    {
+      "workload": "f64_sum",
+      "recipe": "unroll8",
+      "first": {
+        "outcome": "guard_regression",
+        "detail": "len7: speed-ratio 95% CI lower bound 0.5931 is below the non-inferiority floor 0.9000 (geo-mean 0.6052, CI [0.5931, 0.6175], n=40)",
+        "samples": 40,
+        "geo_mean_speedup": 6.225596332802882,
+        "ci95_low": 6.213122997001323,
+        "ci95_high": 6.238094709812557,
+        "pinned_core": 2,
+        "load_before": 5.3,
+        "load_after": 5.31,
+        "guards": [
+          [
+            "len7",
+            0.5931165940625862
+          ],
+          [
+            "len1000003",
+            4.822822344266856
+          ]
+        ]
+      },
+      "rerun": null
+    },
+    {
+      "workload": "f64_dot",
+      "recipe": "unroll4",
+      "first": {
+        "outcome": "accept",
+        "detail": "",
+        "samples": 40,
+        "geo_mean_speedup": 3.628164543190849,
+        "ci95_low": 3.600430428652189,
+        "ci95_high": 3.656112293605688,
+        "pinned_core": 19,
+        "load_before": 5.3,
+        "load_after": 5.31,
+        "guards": [
+          [
+            "len7",
+            1.1661531177549267
+          ],
+          [
+            "len1000003",
+            2.477043736056531
+          ]
+        ]
+      },
+      "rerun": null
+    },
+    {
+      "workload": "f64_dot",
+      "recipe": "unroll8",
+      "first": {
+        "outcome": "accept",
+        "detail": "",
+        "samples": 40,
+        "geo_mean_speedup": 3.691127619650299,
+        "ci95_low": 3.680702802379154,
+        "ci95_high": 3.701581963025824,
+        "pinned_core": 5,
+        "load_before": 5.31,
+        "load_after": 5.53,
+        "guards": [
+          [
+            "len7",
+            0.9882861934850442
+          ],
+          [
+            "len1000003",
+            1.6514210354152317
+          ]
+        ]
+      },
+      "rerun": null
+    },
+    {
+      "workload": "f64_sqdist",
+      "recipe": "unroll4",
+      "first": {
+        "outcome": "accept",
+        "detail": "",
+        "samples": 40,
+        "geo_mean_speedup": 3.6782500433422234,
+        "ci95_low": 3.650405356767075,
+        "ci95_high": 3.7063071245680175,
+        "pinned_core": 20,
+        "load_before": 5.31,
+        "load_after": 5.56,
+        "guards": [
+          [
+            "len7",
+            1.2200139263900835
+          ],
+          [
+            "len1000003",
+            1.4341997887197813
+          ]
+        ]
+      },
+      "rerun": null
+    },
+    {
+      "workload": "f64_sqdist",
+      "recipe": "unroll8",
+      "first": {
+        "outcome": "accept",
+        "detail": "",
+        "samples": 40,
+        "geo_mean_speedup": 3.5839718868341817,
+        "ci95_low": 3.5751071369207756,
+        "ci95_high": 3.5928586175688655,
+        "pinned_core": 2,
+        "load_before": 5.31,
+        "load_after": 5.56,
+        "guards": [
+          [
+            "len7",
+            1.0369348295701757
+          ],
+          [
+            "len1000003",
+            1.3616662172760388
+          ]
+        ]
+      },
+      "rerun": null
+    },
+    {
+      "workload": "f64_sqdist",
+      "recipe": "iter-fold",
+      "first": {
+        "outcome": "insufficient_improvement",
+        "detail": "primary: speedup 95% CI lower bound 0.9970 does not exceed 1.1000 (geo-mean 1.0004, CI [0.9970, 1.0038], n=40)",
+        "samples": 40,
+        "geo_mean_speedup": 1.0003751739419688,
+        "ci95_low": 0.9969934463258802,
+        "ci95_high": 1.003768372126607,
+        "pinned_core": 3,
+        "load_before": 5.31,
+        "load_after": 5.56,
+        "guards": [
+          [
+            "len7",
+            1.000204826143271
+          ],
+          [
+            "len1000003",
+            0.9342739735299864
+          ]
+        ]
+      },
+      "rerun": null
+    },
+    {
+      "workload": "f64_sqdist",
+      "recipe": "bounds-hoist",
+      "first": {
+        "outcome": "insufficient_improvement",
+        "detail": "primary: speedup 95% CI lower bound 0.9915 does not exceed 1.1000 (geo-mean 0.9940, CI [0.9915, 0.9965], n=40)",
+        "samples": 40,
+        "geo_mean_speedup": 0.9939895204516108,
+        "ci95_low": 0.991451435508784,
+        "ci95_high": 0.996534102813218,
+        "pinned_core": 21,
+        "load_before": 5.53,
+        "load_after": 5.95,
+        "guards": [
+          [
+            "len7",
+            0.9899659866279548
+          ],
+          [
+            "len1000003",
+            0.9538264204868274
+          ]
+        ]
+      },
+      "rerun": null
+    },
+    {
+      "workload": "f64_l1",
+      "recipe": "unroll4",
+      "first": {
+        "outcome": "accept",
+        "detail": "",
+        "samples": 40,
+        "geo_mean_speedup": 3.7026005182359745,
+        "ci95_low": 3.692809825970636,
+        "ci95_high": 3.712417168419416,
+        "pinned_core": 18,
+        "load_before": 5.56,
+        "load_after": 5.95,
+        "guards": [
+          [
+            "len7",
+            1.0916563561241015
+          ],
+          [
+            "len1000003",
+            1.6465581358545929
+          ]
+        ]
+      },
+      "rerun": null
+    },
+    {
+      "workload": "f64_l1",
+      "recipe": "unroll8",
+      "first": {
+        "outcome": "guard_regression",
+        "detail": "len7: speed-ratio 95% CI lower bound 0.8173 is below the non-inferiority floor 0.9000 (geo-mean 0.8201, CI [0.8173, 0.8229], n=40)",
+        "samples": 40,
+        "geo_mean_speedup": 3.7429163237150793,
+        "ci95_low": 3.7344445208744337,
+        "ci95_high": 3.751407345329219,
+        "pinned_core": 20,
+        "load_before": 5.56,
+        "load_after": 5.95,
+        "guards": [
+          [
+            "len7",
+            0.8173304792243661
+          ],
+          [
+            "len1000003",
+            1.631980882137885
+          ]
+        ]
+      },
+      "rerun": null
+    },
+    {
+      "workload": "f64_sumsq",
+      "recipe": "unroll4",
+      "first": {
+        "outcome": "guard_regression",
+        "detail": "len7: speed-ratio 95% CI lower bound 0.8629 is below the non-inferiority floor 0.9000 (geo-mean 0.8674, CI [0.8629, 0.8719], n=40)",
+        "samples": 40,
+        "geo_mean_speedup": 3.98592559300288,
+        "ci95_low": 3.977429919618453,
+        "ci95_high": 3.9944394128959098,
+        "pinned_core": 3,
+        "load_before": 5.56,
+        "load_after": 5.95,
+        "guards": [
+          [
+            "len7",
+            0.8628738133819928
+          ],
+          [
+            "len1000003",
+            3.5628947245246514
+          ]
+        ]
+      },
+      "rerun": null
+    },
+    {
+      "workload": "f64_sumsq",
+      "recipe": "unroll8",
+      "first": {
+        "outcome": "guard_regression",
+        "detail": "len7: speed-ratio 95% CI lower bound 0.8451 is below the non-inferiority floor 0.9000 (geo-mean 0.8513, CI [0.8451, 0.8575], n=40)",
+        "samples": 40,
+        "geo_mean_speedup": 6.93240718769878,
+        "ci95_low": 6.9052406982741275,
+        "ci95_high": 6.959680555099148,
+        "pinned_core": 5,
+        "load_before": 5.95,
+        "load_after": 6.34,
+        "guards": [
+          [
+            "len7",
+            0.8451153718514859
+          ],
+          [
+            "len1000003",
+            4.490626073013093
+          ]
+        ]
+      },
+      "rerun": null
+    },
+    {
+      "workload": "f64_saxpy_sum",
+      "recipe": "unroll4",
+      "first": {
+        "outcome": "accept",
+        "detail": "",
+        "samples": 40,
+        "geo_mean_speedup": 3.702915563504419,
+        "ci95_low": 3.689030237192171,
+        "ci95_high": 3.716853153494219,
+        "pinned_core": 2,
+        "load_before": 5.95,
+        "load_after": 6.34,
+        "guards": [
+          [
+            "len7",
+            1.079830189667504
+          ],
+          [
+            "len1000003",
+            1.8586051008014992
+          ]
+        ]
+      },
+      "rerun": null
+    },
+    {
+      "workload": "f64_saxpy_sum",
+      "recipe": "unroll8",
+      "first": {
+        "outcome": "guard_regression",
+        "detail": "len7: speed-ratio 95% CI lower bound 0.8126 is below the non-inferiority floor 0.9000 (geo-mean 0.8211, CI [0.8126, 0.8298], n=40)",
+        "samples": 40,
+        "geo_mean_speedup": 3.7127026204293294,
+        "ci95_low": 3.700289681025851,
+        "ci95_high": 3.7251572001036823,
+        "pinned_core": 20,
+        "load_before": 5.95,
+        "load_after": 6.31,
+        "guards": [
+          [
+            "len7",
+            0.8125725520324365
+          ],
+          [
+            "len1000003",
+            1.893163154103583
+          ]
+        ]
+      },
+      "rerun": null
+    },
+    {
+      "workload": "f64_maxabs",
+      "recipe": "unroll4",
+      "first": {
+        "outcome": "guard_regression",
+        "detail": "len7: speed-ratio 95% CI lower bound 0.8571 is below the non-inferiority floor 0.9000 (geo-mean 0.8763, CI [0.8571, 0.8959], n=40)",
+        "samples": 40,
+        "geo_mean_speedup": 3.5188020130463427,
+        "ci95_low": 3.505832886704867,
+        "ci95_high": 3.531819116072246,
+        "pinned_core": 19,
+        "load_before": 5.95,
+        "load_after": 6.31,
+        "guards": [
+          [
+            "len7",
+            0.8571197193390377
+          ],
+          [
+            "len1000003",
+            3.7203253997848544
+          ]
+        ]
+      },
+      "rerun": null
+    },
+    {
+      "workload": "f64_maxabs",
+      "recipe": "unroll8",
+      "first": {
+        "outcome": "guard_regression",
+        "detail": "len7: speed-ratio 95% CI lower bound 0.7612 is below the non-inferiority floor 0.9000 (geo-mean 0.7684, CI [0.7612, 0.7757], n=40)",
+        "samples": 40,
+        "geo_mean_speedup": 4.632623693526266,
+        "ci95_low": 4.497623627129171,
+        "ci95_high": 4.771675903774904,
+        "pinned_core": 5,
+        "load_before": 6.34,
+        "load_after": 6.17,
+        "guards": [
+          [
+            "len7",
+            0.7611544899014816
+          ],
+          [
+            "len1000003",
+            5.004361265370122
+          ]
+        ]
+      },
+      "rerun": null
+    },
+    {
+      "workload": "f64_maxabs",
+      "recipe": "iter-fold",
+      "first": {
+        "outcome": "insufficient_improvement",
+        "detail": "primary: speedup 95% CI lower bound 0.9952 does not exceed 1.1000 (geo-mean 1.0073, CI [0.9952, 1.0194], n=40)",
+        "samples": 40,
+        "geo_mean_speedup": 1.0072738326162076,
+        "ci95_low": 0.995243149973236,
+        "ci95_high": 1.019449944368498,
+        "pinned_core": 2,
+        "load_before": 6.34,
+        "load_after": 6.17,
+        "guards": [
+          [
+            "len7",
+            0.8280168054868642
+          ],
+          [
+            "len1000003",
+            0.9965221066341442
+          ]
+        ]
+      },
+      "rerun": null
+    },
+    {
+      "workload": "f64_maxabs",
+      "recipe": "bounds-hoist",
+      "first": {
+        "outcome": "insufficient_improvement",
+        "detail": "primary: speedup 95% CI lower bound 0.9937 does not exceed 1.1000 (geo-mean 0.9964, CI [0.9937, 0.9992], n=40)",
+        "samples": 40,
+        "geo_mean_speedup": 0.9964185511470364,
+        "ci95_low": 0.9936593697263324,
+        "ci95_high": 0.999185394229618,
+        "pinned_core": 4,
+        "load_before": 6.31,
+        "load_after": 6.17,
+        "guards": [
+          [
+            "len7",
+            0.8615430178272276
+          ],
+          [
+            "len1000003",
+            0.9950108435163526
+          ]
+        ]
+      },
+      "rerun": null
+    },
+    {
+      "workload": "f64_maxabs",
+      "recipe": "branchless",
+      "first": {
+        "outcome": "insufficient_improvement",
+        "detail": "primary: speedup 95% CI lower bound 0.8869 does not exceed 1.1000 (geo-mean 0.8889, CI [0.8869, 0.8909], n=40)",
+        "samples": 40,
+        "geo_mean_speedup": 0.8888800474488097,
+        "ci95_low": 0.8868898064299566,
+        "ci95_high": 0.890874754703811,
+        "pinned_core": 19,
+        "load_before": 6.31,
+        "load_after": 5.99,
+        "guards": [
+          [
+            "len7",
+            0.42123931742310194
+          ],
+          [
+            "len1000003",
+            0.9305259954259264
+          ]
+        ]
+      },
+      "rerun": null
+    },
+    {
+      "workload": "f64_min",
+      "recipe": "unroll4",
+      "first": {
+        "outcome": "guard_regression",
+        "detail": "len7: speed-ratio 95% CI lower bound 0.7266 is below the non-inferiority floor 0.9000 (geo-mean 0.7446, CI [0.7266, 0.7631], n=40)",
+        "samples": 40,
+        "geo_mean_speedup": 4.0482999937911925,
+        "ci95_low": 4.035612618328205,
+        "ci95_high": 4.061027256505846,
+        "pinned_core": 21,
+        "load_before": 6.17,
+        "load_after": 5.77,
+        "guards": [
+          [
+            "len7",
+            0.7265559490636914
+          ],
+          [
+            "len1000003",
+            3.8314428058560743
+          ]
+        ]
+      },
+      "rerun": null
+    },
+    {
+      "workload": "f64_min",
+      "recipe": "unroll8",
+      "first": {
+        "outcome": "guard_regression",
+        "detail": "len7: speed-ratio 95% CI lower bound 0.7229 is below the non-inferiority floor 0.9000 (geo-mean 0.7410, CI [0.7229, 0.7596], n=40)",
+        "samples": 40,
+        "geo_mean_speedup": 5.687860439938661,
+        "ci95_low": 5.673964508993369,
+        "ci95_high": 5.701790402978538,
+        "pinned_core": 18,
+        "load_before": 6.17,
+        "load_after": 5.77,
+        "guards": [
+          [
+            "len7",
+            0.7228642924088038
+          ],
+          [
+            "len1000003",
+            5.453789325346685
+          ]
+        ]
+      },
+      "rerun": null
+    },
+    {
+      "workload": "f64_min",
+      "recipe": "iter-fold",
+      "first": {
+        "outcome": "insufficient_improvement",
+        "detail": "primary: speedup 95% CI lower bound 0.9979 does not exceed 1.1000 (geo-mean 1.0008, CI [0.9979, 1.0037], n=40)",
+        "samples": 40,
+        "geo_mean_speedup": 1.00079867971576,
+        "ci95_low": 0.997936168006472,
+        "ci95_high": 1.0036694023442914,
+        "pinned_core": 20,
+        "load_before": 6.17,
+        "load_after": 5.77,
+        "guards": [
+          [
+            "len7",
+            0.8642534378421957
+          ],
+          [
+            "len1000003",
+            0.9983396801235352
+          ]
+        ]
+      },
+      "rerun": null
+    },
+    {
+      "workload": "f64_min",
+      "recipe": "bounds-hoist",
+      "first": {
+        "outcome": "insufficient_improvement",
+        "detail": "primary: speedup 95% CI lower bound 0.9986 does not exceed 1.1000 (geo-mean 0.9997, CI [0.9986, 1.0007], n=40)",
+        "samples": 40,
+        "geo_mean_speedup": 0.9996653457171136,
+        "ci95_low": 0.9985999770600168,
+        "ci95_high": 1.0007318509758545,
+        "pinned_core": 3,
+        "load_before": 5.99,
+        "load_after": 5.71,
+        "guards": [
+          [
+            "len7",
+            0.851131115446827
+          ],
+          [
+            "len1000003",
+            0.9995544495699432
+          ]
+        ]
+      },
+      "rerun": null
+    },
+    {
+      "workload": "f64_min",
+      "recipe": "branchless",
+      "first": {
+        "outcome": "insufficient_improvement",
+        "detail": "primary: speedup 95% CI lower bound 0.8818 does not exceed 1.1000 (geo-mean 0.8824, CI [0.8818, 0.8831], n=40)",
+        "samples": 40,
+        "geo_mean_speedup": 0.8824244289027452,
+        "ci95_low": 0.8817938165689949,
+        "ci95_high": 0.8830554922171079,
+        "pinned_core": 2,
+        "load_before": 5.77,
+        "load_after": 5.83,
+        "guards": [
+          [
+            "len7",
+            0.4475866436093256
+          ],
+          [
+            "len1000003",
+            0.9245520084906104
+          ]
+        ]
+      },
+      "rerun": null
+    },
+    {
+      "workload": "f64_argmin",
+      "recipe": "fused-pass",
+      "first": {
+        "outcome": "accept",
+        "detail": "",
+        "samples": 40,
+        "geo_mean_speedup": 1.8836463404475872,
+        "ci95_low": 1.8811557517736237,
+        "ci95_high": 1.886140226579476,
+        "pinned_core": 21,
+        "load_before": 5.77,
+        "load_after": 5.83,
+        "guards": [
+          [
+            "len7",
+            1.5376410533274016
+          ],
+          [
+            "len1000003",
+            1.8764541243489503
+          ]
+        ]
+      },
+      "rerun": null
+    },
+    {
+      "workload": "i32_sum",
+      "recipe": "unroll4",
+      "first": {
+        "outcome": "insufficient_improvement",
+        "detail": "primary: speedup 95% CI lower bound 1.0510 does not exceed 1.1000 (geo-mean 1.0523, CI [1.0510, 1.0537], n=40)",
+        "samples": 40,
+        "geo_mean_speedup": 1.0523333794471248,
+        "ci95_low": 1.0509791521282443,
+        "ci95_high": 1.0536893517403252,
+        "pinned_core": 20,
+        "load_before": 5.77,
+        "load_after": 5.83,
+        "guards": [
+          [
+            "len7",
+            0.6626774291304616
+          ],
+          [
+            "len1000003",
+            1.0636562609646407
+          ]
+        ]
+      },
+      "rerun": null
+    },
+    {
+      "workload": "i32_sum",
+      "recipe": "unroll8",
+      "first": {
+        "outcome": "insufficient_improvement",
+        "detail": "primary: speedup 95% CI lower bound 1.0186 does not exceed 1.1000 (geo-mean 1.0292, CI [1.0186, 1.0400], n=40)",
+        "samples": 40,
+        "geo_mean_speedup": 1.0292325330232062,
+        "ci95_low": 1.0185796515546297,
+        "ci95_high": 1.039996828344799,
+        "pinned_core": 3,
+        "load_before": 5.71,
+        "load_after": 5.68,
+        "guards": [
+          [
+            "len7",
+            0.7547816713182002
+          ],
+          [
+            "len1000003",
+            1.0425520613999515
+          ]
+        ]
+      },
+      "rerun": null
+    },
+    {
+      "workload": "i32_dot",
+      "recipe": "unroll4",
+      "first": {
+        "outcome": "insufficient_improvement",
+        "detail": "primary: speedup 95% CI lower bound 1.0281 does not exceed 1.1000 (geo-mean 1.0291, CI [1.0281, 1.0301], n=40)",
+        "samples": 40,
+        "geo_mean_speedup": 1.0290824306105926,
+        "ci95_low": 1.0280630145270673,
+        "ci95_high": 1.030102857535999,
+        "pinned_core": 18,
+        "load_before": 5.83,
+        "load_after": 5.76,
+        "guards": [
+          [
+            "len7",
+            0.962777062843382
+          ],
+          [
+            "len1000003",
+            1.017593390541791
+          ]
+        ]
+      },
+      "rerun": null
+    },
+    {
+      "workload": "i32_dot",
+      "recipe": "unroll8",
+      "first": {
+        "outcome": "guard_regression",
+        "detail": "len7: speed-ratio 95% CI lower bound 0.8589 is below the non-inferiority floor 0.9000 (geo-mean 0.8754, CI [0.8589, 0.8922], n=40)",
+        "samples": 40,
+        "geo_mean_speedup": 1.117251960393646,
+        "ci95_low": 1.1131630363156484,
+        "ci95_high": 1.1213559041045005,
+        "pinned_core": 20,
+        "load_before": 5.83,
+        "load_after": 5.76,
+        "guards": [
+          [
+            "len7",
+            0.8588910171047004
+          ],
+          [
+            "len1000003",
+            1.0892399439269775
+          ]
+        ]
+      },
+      "rerun": null
+    },
+    {
+      "workload": "i32_l1",
+      "recipe": "unroll4",
+      "first": {
+        "outcome": "insufficient_improvement",
+        "detail": "primary: speedup 95% CI lower bound 0.7187 does not exceed 1.1000 (geo-mean 0.7195, CI [0.7187, 0.7203], n=40)",
+        "samples": 40,
+        "geo_mean_speedup": 0.7195213704327833,
+        "ci95_low": 0.7187405737337146,
+        "ci95_high": 0.7203030153426079,
+        "pinned_core": 21,
+        "load_before": 5.83,
+        "load_after": 5.76,
+        "guards": [
+          [
+            "len7",
+            0.7902668956597233
+          ],
+          [
+            "len1000003",
+            0.7215594991434882
+          ]
+        ]
+      },
+      "rerun": null
+    },
+    {
+      "workload": "i32_l1",
+      "recipe": "unroll8",
+      "first": {
+        "outcome": "accept",
+        "detail": "",
+        "samples": 40,
+        "geo_mean_speedup": 1.7563361826982546,
+        "ci95_low": 1.7537145268179957,
+        "ci95_high": 1.7589617577337977,
+        "pinned_core": 19,
+        "load_before": 5.68,
+        "load_after": 5.78,
+        "guards": [
+          [
+            "len7",
+            0.9362199559427196
+          ],
+          [
+            "len1000003",
+            1.7277882403526998
+          ]
+        ]
+      },
+      "rerun": null
+    },
+    {
+      "workload": "i32_max",
+      "recipe": "unroll4",
+      "first": {
+        "outcome": "insufficient_improvement",
+        "detail": "primary: speedup 95% CI lower bound 0.5474 does not exceed 1.1000 (geo-mean 0.5484, CI [0.5474, 0.5493], n=40)",
+        "samples": 40,
+        "geo_mean_speedup": 0.5483716802456973,
+        "ci95_low": 0.5474164248067042,
+        "ci95_high": 0.5493286026294738,
+        "pinned_core": 21,
+        "load_before": 5.76,
+        "load_after": 5.66,
+        "guards": [
+          [
+            "len7",
+            0.9252628898721272
+          ],
+          [
+            "len1000003",
+            0.5418498735653206
+          ]
+        ]
+      },
+      "rerun": null
+    },
+    {
+      "workload": "i32_max",
+      "recipe": "unroll8",
+      "first": {
+        "outcome": "insufficient_improvement",
+        "detail": "primary: speedup 95% CI lower bound 1.0173 does not exceed 1.1000 (geo-mean 1.0184, CI [1.0173, 1.0195], n=40)",
+        "samples": 40,
+        "geo_mean_speedup": 1.0183929550852813,
+        "ci95_low": 1.0173248522693117,
+        "ci95_high": 1.0194621793165222,
+        "pinned_core": 18,
+        "load_before": 5.76,
+        "load_after": 5.66,
+        "guards": [
+          [
+            "len7",
+            0.8003561513453316
+          ],
+          [
+            "len1000003",
+            1.0234801436115724
+          ]
+        ]
+      },
+      "rerun": null
+    },
+    {
+      "workload": "i32_max",
+      "recipe": "iter-fold",
+      "first": {
+        "outcome": "insufficient_improvement",
+        "detail": "primary: speedup 95% CI lower bound 0.9996 does not exceed 1.1000 (geo-mean 1.0004, CI [0.9996, 1.0013], n=40)",
+        "samples": 40,
+        "geo_mean_speedup": 1.0004492642348997,
+        "ci95_low": 0.999623601280986,
+        "ci95_high": 1.0012756091648216,
+        "pinned_core": 20,
+        "load_before": 5.76,
+        "load_after": 5.69,
+        "guards": [
+          [
+            "len7",
+            0.9219003154067038
+          ],
+          [
+            "len1000003",
+            0.9926024599661304
+          ]
+        ]
+      },
+      "rerun": null
+    },
+    {
+      "workload": "i32_max",
+      "recipe": "bounds-hoist",
+      "first": {
+        "outcome": "insufficient_improvement",
+        "detail": "primary: speedup 95% CI lower bound 0.9997 does not exceed 1.1000 (geo-mean 1.0001, CI [0.9997, 1.0005], n=40)",
+        "samples": 40,
+        "geo_mean_speedup": 1.0000700649840353,
+        "ci95_low": 0.9996850952435444,
+        "ci95_high": 1.0004551829729111,
+        "pinned_core": 19,
+        "load_before": 5.78,
+        "load_after": 5.71,
+        "guards": [
+          [
+            "len7",
+            0.9362391701750518
+          ],
+          [
+            "len1000003",
+            0.9931171295690144
+          ]
+        ]
+      },
+      "rerun": null
+    },
+    {
+      "workload": "i32_max",
+      "recipe": "branchless",
+      "first": {
+        "outcome": "insufficient_improvement",
+        "detail": "primary: speedup 95% CI lower bound 0.9999 does not exceed 1.1000 (geo-mean 1.0007, CI [0.9999, 1.0016], n=40)",
+        "samples": 40,
+        "geo_mean_speedup": 1.0007496022328188,
+        "ci95_low": 0.9998576205991654,
+        "ci95_high": 1.0016423796110048,
+        "pinned_core": 21,
+        "load_before": 5.66,
+        "load_after": 6.35,
+        "guards": [
+          [
+            "len7",
+            0.9348243234671352
+          ],
+          [
+            "len1000003",
+            0.9924039252127104
+          ]
+        ]
+      },
+      "rerun": null
+    },
+    {
+      "workload": "i32_min",
+      "recipe": "unroll4",
+      "first": {
+        "outcome": "insufficient_improvement",
+        "detail": "primary: speedup 95% CI lower bound 0.5498 does not exceed 1.1000 (geo-mean 0.5505, CI [0.5498, 0.5512], n=40)",
+        "samples": 40,
+        "geo_mean_speedup": 0.5505186096017263,
+        "ci95_low": 0.5498403485781815,
+        "ci95_high": 0.5511977073008937,
+        "pinned_core": 18,
+        "load_before": 5.66,
+        "load_after": 6.35,
+        "guards": [
+          [
+            "len7",
+            1.0696602815267864
+          ],
+          [
+            "len1000003",
+            0.5452141251365046
+          ]
+        ]
+      },
+      "rerun": null
+    },
+    {
+      "workload": "i32_min",
+      "recipe": "unroll8",
+      "first": {
+        "outcome": "insufficient_improvement",
+        "detail": "primary: speedup 95% CI lower bound 1.0162 does not exceed 1.1000 (geo-mean 1.0179, CI [1.0162, 1.0196], n=40)",
+        "samples": 40,
+        "geo_mean_speedup": 1.0178781263975782,
+        "ci95_low": 1.0161700889627376,
+        "ci95_high": 1.0195890348004883,
+        "pinned_core": 4,
+        "load_before": 5.69,
+        "load_after": 6.35,
+        "guards": [
+          [
+            "len7",
+            0.8001009186163519
+          ],
+          [
+            "len1000003",
+            1.0315844747555252
+          ]
+        ]
+      },
+      "rerun": null
+    },
+    {
+      "workload": "i32_min",
+      "recipe": "iter-fold",
+      "first": {
+        "outcome": "insufficient_improvement",
+        "detail": "primary: speedup 95% CI lower bound 0.9986 does not exceed 1.1000 (geo-mean 1.0006, CI [0.9986, 1.0026], n=40)",
+        "samples": 40,
+        "geo_mean_speedup": 1.000635343619773,
+        "ci95_low": 0.9986256678573416,
+        "ci95_high": 1.0026490637371617,
+        "pinned_core": 19,
+        "load_before": 5.71,
+        "load_after": 6.32,
+        "guards": [
+          [
+            "len7",
+            0.9651902324848576
+          ],
+          [
+            "len1000003",
+            1.0096920892043717
+          ]
+        ]
+      },
+      "rerun": null
+    },
+    {
+      "workload": "i32_min",
+      "recipe": "bounds-hoist",
+      "first": {
+        "outcome": "insufficient_improvement",
+        "detail": "primary: speedup 95% CI lower bound 1.0003 does not exceed 1.1000 (geo-mean 1.0014, CI [1.0003, 1.0025], n=40)",
+        "samples": 40,
+        "geo_mean_speedup": 1.0014222832295392,
+        "ci95_low": 1.0003097758249695,
+        "ci95_high": 1.0025360279235516,
+        "pinned_core": 5,
+        "load_before": 6.35,
+        "load_after": 6.12,
+        "guards": [
+          [
+            "len7",
+            0.954794067410844
+          ],
+          [
+            "len1000003",
+            1.0087103246815785
+          ]
+        ]
+      },
+      "rerun": null
+    },
+    {
+      "workload": "i32_min",
+      "recipe": "branchless",
+      "first": {
+        "outcome": "insufficient_improvement",
+        "detail": "primary: speedup 95% CI lower bound 0.9997 does not exceed 1.1000 (geo-mean 1.0007, CI [0.9997, 1.0017], n=40)",
+        "samples": 40,
+        "geo_mean_speedup": 1.0006988526793208,
+        "ci95_low": 0.9996995688987556,
+        "ci95_high": 1.001699135328051,
+        "pinned_core": 2,
+        "load_before": 6.35,
+        "load_after": 6.12,
+        "guards": [
+          [
+            "len7",
+            0.9531273016066776
+          ],
+          [
+            "len1000003",
+            1.012116584933472
+          ]
+        ]
+      },
+      "rerun": null
+    },
+    {
+      "workload": "i32_count_eq",
+      "recipe": "unroll4",
+      "first": {
+        "outcome": "insufficient_improvement",
+        "detail": "primary: speedup 95% CI lower bound 1.0788 does not exceed 1.1000 (geo-mean 1.0939, CI [1.0788, 1.1092], n=40)",
+        "samples": 40,
+        "geo_mean_speedup": 1.093880585166794,
+        "ci95_low": 1.0787813822055707,
+        "ci95_high": 1.1091911246729609,
+        "pinned_core": 4,
+        "load_before": 6.35,
+        "load_after": 6.12,
+        "guards": [
+          [
+            "len7",
+            1.1837830804192733
+          ],
+          [
+            "len1000003",
+            1.0292325880202884
+          ]
+        ]
+      },
+      "rerun": null
+    },
+    {
+      "workload": "i32_count_eq",
+      "recipe": "unroll8",
+      "first": {
+        "outcome": "accept",
+        "detail": "",
+        "samples": 40,
+        "geo_mean_speedup": 1.1307533106845833,
+        "ci95_low": 1.1285276661756694,
+        "ci95_high": 1.1329833445351398,
+        "pinned_core": 19,
+        "load_before": 6.32,
+        "load_after": 6.26,
+        "guards": [
+          [
+            "len7",
+            1.1527834672498598
+          ],
+          [
+            "len1000003",
+            1.1155309809655711
+          ]
+        ]
+      },
+      "rerun": null
+    },
+    {
+      "workload": "i32_count_eq",
+      "recipe": "iter-fold",
+      "first": {
+        "outcome": "insufficient_improvement",
+        "detail": "primary: speedup 95% CI lower bound 0.9945 does not exceed 1.1000 (geo-mean 1.0035, CI [0.9945, 1.0126], n=40)",
+        "samples": 40,
+        "geo_mean_speedup": 1.003513066599263,
+        "ci95_low": 0.9944896395167924,
+        "ci95_high": 1.0126183670699298,
+        "pinned_core": 5,
+        "load_before": 6.12,
+        "load_after": 6.14,
+        "guards": [
+          [
+            "len7",
+            0.9941054044727377
+          ],
+          [
+            "len1000003",
+            0.9916508705653588
+          ]
+        ]
+      },
+      "rerun": null
+    },
+    {
+      "workload": "i32_count_eq",
+      "recipe": "bounds-hoist",
+      "first": {
+        "outcome": "insufficient_improvement",
+        "detail": "primary: speedup 95% CI lower bound 0.9992 does not exceed 1.1000 (geo-mean 1.0011, CI [0.9992, 1.0030], n=40)",
+        "samples": 40,
+        "geo_mean_speedup": 1.0011223263257518,
+        "ci95_low": 0.9992332294784636,
+        "ci95_high": 1.003014994598402,
+        "pinned_core": 2,
+        "load_before": 6.12,
+        "load_after": 6.14,
+        "guards": [
+          [
+            "len7",
+            0.9990296127743692
+          ],
+          [
+            "len1000003",
+            0.9669518577760068
+          ]
+        ]
+      },
+      "rerun": null
+    },
+    {
+      "workload": "i32_count_eq",
+      "recipe": "branchless",
+      "first": {
+        "outcome": "insufficient_improvement",
+        "detail": "primary: speedup 95% CI lower bound 0.9971 does not exceed 1.1000 (geo-mean 0.9991, CI [0.9971, 1.0010], n=40)",
+        "samples": 40,
+        "geo_mean_speedup": 0.9990590079617608,
+        "ci95_low": 0.9971039379207132,
+        "ci95_high": 1.0010179114034403,
+        "pinned_core": 4,
+        "load_before": 6.12,
+        "load_after": 6.14,
+        "guards": [
+          [
+            "len7",
+            0.9979162238393168
+          ],
+          [
+            "len1000003",
+            0.9729857098396744
+          ]
+        ]
+      },
+      "rerun": null
+    },
+    {
+      "workload": "i32_argmin",
+      "recipe": "fused-pass",
+      "first": {
+        "outcome": "accept",
+        "detail": "",
+        "samples": 40,
+        "geo_mean_speedup": 1.9783500070194664,
+        "ci95_low": 1.9684672488379087,
+        "ci95_high": 1.9882823819316715,
+        "pinned_core": 19,
+        "load_before": 6.26,
+        "load_after": 6.37,
+        "guards": [
+          [
+            "len7",
+            1.3016115499139518
+          ],
+          [
+            "len1000003",
+            1.881007548051048
+          ]
+        ]
+      },
+      "rerun": null
+    },
+    {
+      "workload": "u8_sum",
+      "recipe": "unroll4",
+      "first": {
+        "outcome": "guard_regression",
+        "detail": "len7: speed-ratio 95% CI lower bound 0.7952 is below the non-inferiority floor 0.9000 (geo-mean 0.7989, CI [0.7952, 0.8025], n=40)",
+        "samples": 40,
+        "geo_mean_speedup": 1.6041056882939644,
+        "ci95_low": 1.6003161264855212,
+        "ci95_high": 1.607904223816077,
+        "pinned_core": 5,
+        "load_before": 6.14,
+        "load_after": 6.32,
+        "guards": [
+          [
+            "len7",
+            0.7952073702490345
+          ],
+          [
+            "len1000003",
+            1.6656110198220655
+          ]
+        ]
+      },
+      "rerun": null
+    },
+    {
+      "workload": "u8_sum",
+      "recipe": "unroll8",
+      "first": {
+        "outcome": "insufficient_improvement",
+        "detail": "primary: speedup 95% CI lower bound 0.9410 does not exceed 1.1000 (geo-mean 0.9427, CI [0.9410, 0.9443], n=40)",
+        "samples": 40,
+        "geo_mean_speedup": 0.9426599906895078,
+        "ci95_low": 0.9410489060011588,
+        "ci95_high": 0.9442738335701852,
+        "pinned_core": 2,
+        "load_before": 6.14,
+        "load_after": 6.32,
+        "guards": [
+          [
+            "len7",
+            0.9075969902850496
+          ],
+          [
+            "len1000003",
+            0.999606155035598
+          ]
+        ]
+      },
+      "rerun": null
+    },
+    {
+      "workload": "u8_sum",
+      "recipe": "iter-fold",
+      "first": {
+        "outcome": "insufficient_improvement",
+        "detail": "primary: speedup 95% CI lower bound 0.9950 does not exceed 1.1000 (geo-mean 0.9977, CI [0.9950, 1.0005], n=40)",
+        "samples": 40,
+        "geo_mean_speedup": 0.9977020158585524,
+        "ci95_low": 0.9949566932094768,
+        "ci95_high": 1.000454913507122,
+        "pinned_core": 4,
+        "load_before": 6.14,
+        "load_after": 6.29,
+        "guards": [
+          [
+            "len7",
+            0.7499952544730005
+          ],
+          [
+            "len1000003",
+            1.0004410722795305
+          ]
+        ]
+      },
+      "rerun": null
+    },
+    {
+      "workload": "u8_sum",
+      "recipe": "bounds-hoist",
+      "first": {
+        "outcome": "insufficient_improvement",
+        "detail": "primary: speedup 95% CI lower bound 0.9735 does not exceed 1.1000 (geo-mean 0.9907, CI [0.9735, 1.0082], n=40)",
+        "samples": 40,
+        "geo_mean_speedup": 0.9906660147780462,
+        "ci95_low": 0.9734706135055794,
+        "ci95_high": 1.0081651559074938,
+        "pinned_core": 3,
+        "load_before": 6.37,
+        "load_after": 6.29,
+        "guards": [
+          [
+            "len7",
+            0.7187481359852721
+          ],
+          [
+            "len1000003",
+            0.9962602585894096
+          ]
+        ]
+      },
+      "rerun": null
+    },
+    {
+      "workload": "u8_sum",
+      "recipe": "swar-u64",
+      "first": {
+        "outcome": "guard_regression",
+        "detail": "len7: speed-ratio 95% CI lower bound 0.6760 is below the non-inferiority floor 0.9000 (geo-mean 0.6795, CI [0.6760, 0.6830], n=40)",
+        "samples": 40,
+        "geo_mean_speedup": 6.107896126596492,
+        "ci95_low": 6.096228664738375,
+        "ci95_high": 6.119585918598981,
+        "pinned_core": 18,
+        "load_before": 6.32,
+        "load_after": 6.07,
+        "guards": [
+          [
+            "len7",
+            0.6760150783077804
+          ],
+          [
+            "len1000003",
+            6.484086172985865
+          ]
+        ]
+      },
+      "rerun": null
+    },
+    {
+      "workload": "u8_count_eq",
+      "recipe": "unroll4",
+      "first": {
+        "outcome": "accept",
+        "detail": "",
+        "samples": 40,
+        "geo_mean_speedup": 1.8868920539492495,
+        "ci95_low": 1.8798009490762315,
+        "ci95_high": 1.8940099083397337,
+        "pinned_core": 5,
+        "load_before": 6.32,
+        "load_after": 6.07,
+        "guards": [
+          [
+            "len7",
+            1.2060190986501975
+          ],
+          [
+            "len1000003",
+            1.857971319791391
+          ]
+        ]
+      },
+      "rerun": null
+    },
+    {
+      "workload": "u8_count_eq",
+      "recipe": "unroll8",
+      "first": {
+        "outcome": "accept",
+        "detail": "",
+        "samples": 40,
+        "geo_mean_speedup": 2.0896060878802833,
+        "ci95_low": 2.085637953374763,
+        "ci95_high": 2.0935817721580112,
+        "pinned_core": 20,
+        "load_before": 6.29,
+        "load_after": 6.23,
+        "guards": [
+          [
+            "len7",
+            1.1403793508578497
+          ],
+          [
+            "len1000003",
+            2.0427233082517797
+          ]
+        ]
+      },
+      "rerun": null
+    },
+    {
+      "workload": "u8_count_eq",
+      "recipe": "branchless",
+      "first": {
+        "outcome": "insufficient_improvement",
+        "detail": "primary: speedup 95% CI lower bound 0.9941 does not exceed 1.1000 (geo-mean 0.9973, CI [0.9941, 1.0004], n=40)",
+        "samples": 40,
+        "geo_mean_speedup": 0.9972547077929038,
+        "ci95_low": 0.9941433049130872,
+        "ci95_high": 1.0003758485322751,
+        "pinned_core": 19,
+        "load_before": 6.29,
+        "load_after": 6.23,
+        "guards": [
+          [
+            "len7",
+            0.994421966088314
+          ],
+          [
+            "len1000003",
+            0.9976145864366736
+          ]
+        ]
+      },
+      "rerun": null
+    },
+    {
+      "workload": "u8_count_eq",
+      "recipe": "swar-u64",
+      "first": {
+        "outcome": "accept",
+        "detail": "",
+        "samples": 40,
+        "geo_mean_speedup": 3.702614592421135,
+        "ci95_low": 3.696545857744768,
+        "ci95_high": 3.708693290328581,
+        "pinned_core": 18,
+        "load_before": 6.07,
+        "load_after": 5.95,
+        "guards": [
+          [
+            "len7",
+            1.0076934938702646
+          ],
+          [
+            "len1000003",
+            3.623226613656729
+          ]
+        ]
+      },
+      "rerun": null
+    },
+    {
+      "workload": "u8_hamming",
+      "recipe": "unroll4",
+      "first": {
+        "outcome": "accept",
+        "detail": "",
+        "samples": 40,
+        "geo_mean_speedup": 1.791315461266456,
+        "ci95_low": 1.7790154819322026,
+        "ci95_high": 1.80370048173338,
+        "pinned_core": 21,
+        "load_before": 6.07,
+        "load_after": 6.04,
+        "guards": [
+          [
+            "len7",
+            1.3387403647754244
+          ],
+          [
+            "len1000003",
+            1.7980797052920678
+          ]
+        ]
+      },
+      "rerun": null
+    },
+    {
+      "workload": "u8_hamming",
+      "recipe": "unroll8",
+      "first": {
+        "outcome": "accept",
+        "detail": "",
+        "samples": 40,
+        "geo_mean_speedup": 2.68027897436764,
+        "ci95_low": 2.669329310294194,
+        "ci95_high": 2.6912735542717625,
+        "pinned_core": 20,
+        "load_before": 6.23,
+        "load_after": 5.95,
+        "guards": [
+          [
+            "len7",
+            0.9522102632910328
+          ],
+          [
+            "len1000003",
+            2.6448425195230514
+          ]
+        ]
+      },
+      "rerun": null
+    },
+    {
+      "workload": "u8_hamming",
+      "recipe": "iter-fold",
+      "first": {
+        "outcome": "insufficient_improvement",
+        "detail": "primary: speedup 95% CI lower bound 0.9998 does not exceed 1.1000 (geo-mean 1.0011, CI [0.9998, 1.0025], n=40)",
+        "samples": 40,
+        "geo_mean_speedup": 1.0011475340452782,
+        "ci95_low": 0.9997848991637468,
+        "ci95_high": 1.0025120261001097,
+        "pinned_core": 19,
+        "load_before": 6.23,
+        "load_after": 5.95,
+        "guards": [
+          [
+            "len7",
+            0.9948405701101448
+          ],
+          [
+            "len1000003",
+            0.998218794134278
+          ]
+        ]
+      },
+      "rerun": null
+    },
+    {
+      "workload": "u8_hamming",
+      "recipe": "bounds-hoist",
+      "first": {
+        "outcome": "insufficient_improvement",
+        "detail": "primary: speedup 95% CI lower bound 0.9989 does not exceed 1.1000 (geo-mean 1.0004, CI [0.9989, 1.0019], n=40)",
+        "samples": 40,
+        "geo_mean_speedup": 1.000371656020825,
+        "ci95_low": 0.998859706262937,
+        "ci95_high": 1.0018858943804614,
+        "pinned_core": 5,
+        "load_before": 6.04,
+        "load_after": 6.04,
+        "guards": [
+          [
+            "len7",
+            0.9963585990038428
+          ],
+          [
+            "len1000003",
+            0.9996529618902894
+          ]
+        ]
+      },
+      "rerun": null
+    },
+    {
+      "workload": "u8_hamming",
+      "recipe": "swar-u64",
+      "first": {
+        "outcome": "guard_regression",
+        "detail": "len7: speed-ratio 95% CI lower bound 0.8982 is below the non-inferiority floor 0.9000 (geo-mean 0.9011, CI [0.8982, 0.9039], n=40)",
+        "samples": 40,
+        "geo_mean_speedup": 10.804672915082335,
+        "ci95_low": 10.792819415580247,
+        "ci95_high": 10.816539433003896,
+        "pinned_core": 18,
+        "load_before": 5.95,
+        "load_after": 6.03,
+        "guards": [
+          [
+            "len7",
+            0.8982097736416951
+          ],
+          [
+            "len1000003",
+            10.620296815949052
+          ]
+        ]
+      },
+      "rerun": null
+    },
+    {
+      "workload": "u8_max",
+      "recipe": "unroll4",
+      "first": {
+        "outcome": "insufficient_improvement",
+        "detail": "primary: speedup 95% CI lower bound 0.2211 does not exceed 1.1000 (geo-mean 0.2222, CI [0.2211, 0.2233], n=40)",
+        "samples": 40,
+        "geo_mean_speedup": 0.22218025957657417,
+        "ci95_low": 0.2210744295221795,
+        "ci95_high": 0.22329162107172307,
+        "pinned_core": 4,
+        "load_before": 5.95,
+        "load_after": 6.03,
+        "guards": [
+          [
+            "len7",
+            1.0271335039586351
+          ],
+          [
+            "len1000003",
+            0.25020995542948726
+          ]
+        ]
+      },
+      "rerun": null
+    },
+    {
+      "workload": "u8_max",
+      "recipe": "unroll8",
+      "first": {
+        "outcome": "insufficient_improvement",
+        "detail": "primary: speedup 95% CI lower bound 0.5256 does not exceed 1.1000 (geo-mean 0.5311, CI [0.5256, 0.5368], n=40)",
+        "samples": 40,
+        "geo_mean_speedup": 0.5311337514851183,
+        "ci95_low": 0.5255715809933078,
+        "ci95_high": 0.5367547869188297,
+        "pinned_core": 3,
+        "load_before": 5.95,
+        "load_after": 6.03,
+        "guards": [
+          [
+            "len7",
+            0.7143828985799293
+          ],
+          [
+            "len1000003",
+            0.500781151261177
+          ]
+        ]
+      },
+      "rerun": null
+    },
+    {
+      "workload": "u8_max",
+      "recipe": "branchless",
+      "first": {
+        "outcome": "insufficient_improvement",
+        "detail": "primary: speedup 95% CI lower bound 0.9878 does not exceed 1.1000 (geo-mean 0.9921, CI [0.9878, 0.9964], n=40)",
+        "samples": 40,
+        "geo_mean_speedup": 0.9921077992475584,
+        "ci95_low": 0.9877869472175164,
+        "ci95_high": 0.9964475518738454,
+        "pinned_core": 5,
+        "load_before": 6.04,
+        "load_after": 6.02,
+        "guards": [
+          [
+            "len7",
+            0.8698378106743995
+          ],
+          [
+            "len1000003",
+            0.9966526392081148
+          ]
+        ]
+      },
+      "rerun": null
+    },
+    {
+      "workload": "u8_find_first",
+      "recipe": "swar-u64",
+      "first": {
+        "outcome": "accept",
+        "detail": "",
+        "samples": 40,
+        "geo_mean_speedup": 8.223585708522306,
+        "ci95_low": 7.589657982925409,
+        "ci95_high": 8.91046237624341,
+        "pinned_core": 18,
+        "load_before": 6.03,
+        "load_after": 5.94,
+        "guards": [
+          [
+            "len7",
+            0.9674570771607688
+          ],
+          [
+            "len1000003",
+            7.012355302349806
+          ]
+        ]
+      },
+      "rerun": null
+    },
+    {
+      "workload": "u8_count_digit",
+      "recipe": "unroll4",
+      "first": {
+        "outcome": "accept",
+        "detail": "",
+        "samples": 40,
+        "geo_mean_speedup": 1.6663499444201038,
+        "ci95_low": 1.664447601733749,
+        "ci95_high": 1.6682544613459436,
+        "pinned_core": 19,
+        "load_before": 6.03,
+        "load_after": 5.94,
+        "guards": [
+          [
+            "len7",
+            1.3248627063969411
+          ],
+          [
+            "len1000003",
+            1.6571503969645485
+          ]
+        ]
+      },
+      "rerun": null
+    },
+    {
+      "workload": "u8_count_digit",
+      "recipe": "unroll8",
+      "first": {
+        "outcome": "accept",
+        "detail": "",
+        "samples": 40,
+        "geo_mean_speedup": 1.9979793151007217,
+        "ci95_low": 1.995979956157639,
+        "ci95_high": 1.9999806767874544,
+        "pinned_core": 20,
+        "load_before": 6.03,
+        "load_after": 5.94,
+        "guards": [
+          [
+            "len7",
+            1.1698310747645737
+          ],
+          [
+            "len1000003",
+            1.9914569004030485
+          ]
+        ]
+      },
+      "rerun": null
+    },
+    {
+      "workload": "u8_count_digit",
+      "recipe": "iter-fold",
+      "first": {
+        "outcome": "insufficient_improvement",
+        "detail": "primary: speedup 95% CI lower bound 0.9982 does not exceed 1.1000 (geo-mean 0.9986, CI [0.9982, 0.9991], n=40)",
+        "samples": 40,
+        "geo_mean_speedup": 0.998639889915761,
+        "ci95_low": 0.9981608992786156,
+        "ci95_high": 0.9991191104076628,
+        "pinned_core": 21,
+        "load_before": 6.02,
+        "load_after": 6.27,
+        "guards": [
+          [
+            "len7",
+            0.9962278252296684
+          ],
+          [
+            "len1000003",
+            0.9910222601226314
+          ]
+        ]
+      },
+      "rerun": null
+    },
+    {
+      "workload": "u8_count_digit",
+      "recipe": "bounds-hoist",
+      "first": {
+        "outcome": "insufficient_improvement",
+        "detail": "primary: speedup 95% CI lower bound 0.9971 does not exceed 1.1000 (geo-mean 0.9982, CI [0.9971, 0.9993], n=40)",
+        "samples": 40,
+        "geo_mean_speedup": 0.9982045671897556,
+        "ci95_low": 0.9971204453205236,
+        "ci95_high": 0.9992898677733876,
+        "pinned_core": 20,
+        "load_before": 5.94,
+        "load_after": 6.17,
+        "guards": [
+          [
+            "len7",
+            0.999968171854002
+          ],
+          [
+            "len1000003",
+            0.9976643977965388
+          ]
+        ]
+      },
+      "rerun": null
+    },
+    {
+      "workload": "u8_count_digit",
+      "recipe": "branchless",
+      "first": {
+        "outcome": "insufficient_improvement",
+        "detail": "primary: speedup 95% CI lower bound 0.9971 does not exceed 1.1000 (geo-mean 0.9982, CI [0.9971, 0.9993], n=40)",
+        "samples": 40,
+        "geo_mean_speedup": 0.9982139816550106,
+        "ci95_low": 0.9971013691375854,
+        "ci95_high": 0.9993278356777152,
+        "pinned_core": 19,
+        "load_before": 5.94,
+        "load_after": 6.17,
+        "guards": [
+          [
+            "len7",
+            0.9818165871585988
+          ],
+          [
+            "len1000003",
+            0.995204167757489
+          ]
+        ]
+      },
+      "rerun": null
+    },
+    {
+      "workload": "u8_count_digit",
+      "recipe": "table",
+      "first": {
+        "outcome": "accept",
+        "detail": "",
+        "samples": 40,
+        "geo_mean_speedup": 2.49870718547945,
+        "ci95_low": 2.4806096089542784,
+        "ci95_high": 2.516936794983492,
+        "pinned_core": 18,
+        "load_before": 5.94,
+        "load_after": 6.15,
+        "guards": [
+          [
+            "len7",
+            1.4006309214977832
+          ],
+          [
+            "len1000003",
+            2.2840673949482464
+          ]
+        ]
+      },
+      "rerun": null
+    },
+    {
+      "workload": "u8_count_vowel",
+      "recipe": "unroll4",
+      "first": {
+        "outcome": "insufficient_improvement",
+        "detail": "primary: speedup 95% CI lower bound 0.9371 does not exceed 1.1000 (geo-mean 0.9462, CI [0.9371, 0.9554], n=40)",
+        "samples": 40,
+        "geo_mean_speedup": 0.9461986593197588,
+        "ci95_low": 0.9371165384937326,
+        "ci95_high": 0.9553688000614626,
+        "pinned_core": 21,
+        "load_before": 6.27,
+        "load_after": 6.13,
+        "guards": [
+          [
+            "len7",
+            1.005065690109631
+          ],
+          [
+            "len1000003",
+            0.9773360326916224
+          ]
+        ]
+      },
+      "rerun": null
+    },
+    {
+      "workload": "u8_count_vowel",
+      "recipe": "unroll8",
+      "first": {
+        "outcome": "insufficient_improvement",
+        "detail": "primary: speedup 95% CI lower bound 1.0948 does not exceed 1.1000 (geo-mean 1.1050, CI [1.0948, 1.1154], n=40)",
+        "samples": 40,
+        "geo_mean_speedup": 1.1050432125527014,
+        "ci95_low": 1.0947626440133185,
+        "ci95_high": 1.1154203226484398,
+        "pinned_core": 4,
+        "load_before": 6.17,
+        "load_after": 6.2,
+        "guards": [
+          [
+            "len7",
+            1.0224544654398475
+          ],
+          [
+            "len1000003",
+            1.0095434360758908
+          ]
+        ]
+      },
+      "rerun": null
+    },
+    {
+      "workload": "u8_count_vowel",
+      "recipe": "iter-fold",
+      "first": {
+        "outcome": "insufficient_improvement",
+        "detail": "primary: speedup 95% CI lower bound 1.0211 does not exceed 1.1000 (geo-mean 1.0311, CI [1.0211, 1.0412], n=40)",
+        "samples": 40,
+        "geo_mean_speedup": 1.031114233184318,
+        "ci95_low": 1.0211223644663985,
+        "ci95_high": 1.041203874161421,
+        "pinned_core": 19,
+        "load_before": 6.17,
+        "load_after": 6.2,
+        "guards": [
+          [
+            "len7",
+            0.8914350645755121
+          ],
+          [
+            "len1000003",
+            0.998547320266714
+          ]
+        ]
+      },
+      "rerun": null
+    },
+    {
+      "workload": "u8_count_vowel",
+      "recipe": "bounds-hoist",
+      "first": {
+        "outcome": "insufficient_improvement",
+        "detail": "primary: speedup 95% CI lower bound 0.9762 does not exceed 1.1000 (geo-mean 1.0101, CI [0.9762, 1.0451], n=40)",
+        "samples": 40,
+        "geo_mean_speedup": 1.0100903451134646,
+        "ci95_low": 0.9762469684590028,
+        "ci95_high": 1.045106963970341,
+        "pinned_core": 2,
+        "load_before": 6.15,
+        "load_after": 6.26,
+        "guards": [
+          [
+            "len7",
+            0.8599992581854775
+          ],
+          [
+            "len1000003",
+            1.0166714156840984
+          ]
+        ]
+      },
+      "rerun": null
+    },
+    {
+      "workload": "u8_count_vowel",
+      "recipe": "branchless",
+      "first": {
+        "outcome": "insufficient_improvement",
+        "detail": "primary: speedup 95% CI lower bound 0.8441 does not exceed 1.1000 (geo-mean 0.8716, CI [0.8441, 0.8999], n=40)",
+        "samples": 40,
+        "geo_mean_speedup": 0.8715579344128406,
+        "ci95_low": 0.8440911263832953,
+        "ci95_high": 0.8999185150692399,
+        "pinned_core": 21,
+        "load_before": 6.13,
+        "load_after": 6.14,
+        "guards": [
+          [
+            "len7",
+            0.8514571000988049
+          ],
+          [
+            "len1000003",
+            0.9653291379641358
+          ]
+        ]
+      },
+      "rerun": null
+    },
+    {
+      "workload": "u8_count_vowel",
+      "recipe": "table",
+      "first": {
+        "outcome": "accept",
+        "detail": "",
+        "samples": 40,
+        "geo_mean_speedup": 2.107174508378081,
+        "ci95_low": 2.0907796971182786,
+        "ci95_high": 2.1236978792544776,
+        "pinned_core": 3,
+        "load_before": 6.2,
+        "load_after": 6.05,
+        "guards": [
+          [
+            "len7",
+            1.4437801692919696
+          ],
+          [
+            "len1000003",
+            31.063681119256135
+          ]
+        ]
+      },
+      "rerun": null
+    },
+    {
+      "workload": "u8_count_space",
+      "recipe": "unroll4",
+      "first": {
+        "outcome": "insufficient_improvement",
+        "detail": "primary: speedup 95% CI lower bound 0.9814 does not exceed 1.1000 (geo-mean 0.9874, CI [0.9814, 0.9934], n=40)",
+        "samples": 40,
+        "geo_mean_speedup": 0.98738119667792,
+        "ci95_low": 0.9814150117543692,
+        "ci95_high": 0.9933836510309332,
+        "pinned_core": 20,
+        "load_before": 6.2,
+        "load_after": 6.14,
+        "guards": [
+          [
+            "len7",
+            0.908318251050959
+          ],
+          [
+            "len1000003",
+            0.99048213448279
+          ]
+        ]
+      },
+      "rerun": null
+    },
+    {
+      "workload": "u8_count_space",
+      "recipe": "unroll8",
+      "first": {
+        "outcome": "accept",
+        "detail": "",
+        "samples": 40,
+        "geo_mean_speedup": 1.199207404737208,
+        "ci95_low": 1.193079188602404,
+        "ci95_high": 1.2053670982738085,
+        "pinned_core": 18,
+        "load_before": 6.26,
+        "load_after": 6.05,
+        "guards": [
+          [
+            "len7",
+            0.952947195188762
+          ],
+          [
+            "len1000003",
+            1.0059557519548563
+          ]
+        ]
+      },
+      "rerun": null
+    },
+    {
+      "workload": "u8_count_space",
+      "recipe": "branchless",
+      "first": {
+        "outcome": "insufficient_improvement",
+        "detail": "primary: speedup 95% CI lower bound 0.8124 does not exceed 1.1000 (geo-mean 0.8151, CI [0.8124, 0.8177], n=40)",
+        "samples": 40,
+        "geo_mean_speedup": 0.8150677981872235,
+        "ci95_low": 0.8123982689928501,
+        "ci95_high": 0.8177460994166833,
+        "pinned_core": 21,
+        "load_before": 6.14,
+        "load_after": 6.11,
+        "guards": [
+          [
+            "len7",
+            0.8128026541675931
+          ],
+          [
+            "len1000003",
+            0.9670205691389292
+          ]
+        ]
+      },
+      "rerun": null
+    },
+    {
+      "workload": "u8_count_space",
+      "recipe": "table",
+      "first": {
+        "outcome": "accept",
+        "detail": "",
+        "samples": 40,
+        "geo_mean_speedup": 1.359715313457862,
+        "ci95_low": 1.347322059838472,
+        "ci95_high": 1.3722225656080065,
+        "pinned_core": 20,
+        "load_before": 6.14,
+        "load_after": 6.11,
+        "guards": [
+          [
+            "len7",
+            1.1868540525945452
+          ],
+          [
+            "len1000003",
+            9.18322033052772
+          ]
+        ]
+      },
+      "rerun": null
+    },
+    {
+      "workload": "u8_hist",
+      "recipe": "table",
+      "first": {
+        "outcome": "insufficient_improvement",
+        "detail": "primary: speedup 95% CI lower bound 0.6164 does not exceed 1.1000 (geo-mean 0.6288, CI [0.6164, 0.6415], n=40)",
+        "samples": 40,
+        "geo_mean_speedup": 0.6288277477669811,
+        "ci95_low": 0.6164262949936,
+        "ci95_high": 0.6414786967609803,
+        "pinned_core": 19,
+        "load_before": 6.05,
+        "load_after": 5.48,
+        "guards": [
+          [
+            "len7",
+            0.19410140769044495
+          ],
+          [
+            "len1000003",
+            0.8909098267750779
+          ]
+        ]
+      },
+      "rerun": null
+    }
+  ]
+}
