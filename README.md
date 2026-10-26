@@ -6,7 +6,7 @@
 
 Rune reimagines Cargo as a learning software toolchain. Declare behavior, hardware targets and constraints. Rune's proposed architecture explores implementations, validates candidates independently and freezes approved build plans for deterministic execution.
 
-> **Architecture preview.** This package contains nine ADRs, animated visual assets and adapter smoke scripts. A Rune CLI, compiler integration and autonomous optimization engine have not been implemented. The name is user selected; public namespace availability remains unresolved.
+> **Phase 1 (v0.1.0).** `rune build`, `verify`, `explain` and `rollback` are implemented: frozen plans, offline replay, independent rebuild and rollback. `rune improve` runs one synthetic, schema-checked OpenRouter proposal and never applies code. Compiler integration, RuVector retrieval, isolated workers, MetaHarness evaluation and the autonomous optimizer are not implemented (ADR 008 Phases 2 to 4). The name is user selected; the crates.io package is `rune-toolchain` because `rune` belongs to the Rune language.
 
 ## The contract
 
@@ -21,7 +21,7 @@ Rune reimagines Cargo as a learning software toolchain. Declare behavior, hardwa
 | Explain | Show the recipe, measurements, cost and reasons behind a decision |
 | Rollback | Restore the previous approved plan and artifact |
 
-**Proposed CLI**, shown as an interface design rather than runnable commands:
+**CLI** (`cargo install rune-toolchain` installs the `rune` binary):
 
 ```text
 rune build
@@ -85,7 +85,7 @@ Rune is the toolchain. RVF carries artifacts and evidence. RVForge authors and s
 
 ## Try the validated adapters
 
-Requirements: Node.js 18 or later for the Agent Booster fixture, Python 3 for the OpenRouter smoke. There is no Rune installation command yet.
+Requirements: Node.js 18 or later for the Agent Booster fixture, Rust 1.88 or later for Rune itself.
 
 ```sh
 npm install --ignore-scripts
@@ -97,7 +97,7 @@ Agent Booster is pinned to version 0.2.2. Retain the generated dependency lockfi
 For one synthetic OpenRouter proposal, inject `OPENROUTER_API_KEY` through the host secret manager and run:
 
 ```sh
-python3 scripts/openrouter-proposal.py
+rune improve
 ```
 
 The script never applies returned code. Missing credentials exit with status 2 before any request. Provider or schema failure exits with status 1. This is a smoke adapter; the full budget reservation controller and provider allowlist are future implementation work.

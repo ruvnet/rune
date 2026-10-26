@@ -24,7 +24,7 @@ Pin and retain the resulting package-lock.json before production integration. Th
 Inject OPENROUTER_API_KEY through the host secret manager, then run:
 
 ```sh
-python3 scripts/openrouter-proposal.py
+rune improve
 ```
 
 Missing credentials exit 2 without making a network request. Provider or schema failure exits 1. No global ruOS route changes are needed.
@@ -39,8 +39,17 @@ Missing credentials exit 2 without making a network request. Provider or schema 
 
 ## Implementation acceptance
 
-Build an unchanged workspace, independently validate a kernel improvement of at least 10%, then replay the promoted build with agents and networking disabled. This package does not yet satisfy that implementation gate.
+Rune 0.1.0 covers ADR 008 Phase 1. Measured by `cargo test --workspace`:
 
-## Rune visual update
+| ADR 008 gate | Status |
+| --- | --- |
+| One unchanged workspace builds; matches plain Cargo | Met on a fixture crate: `rune build` and `cargo build --release --locked --offline` give the same artifact SHA-256 |
+| Frozen replay works with agents disabled | Met: replay makes no model call (receipt records 0) and passes with network proxies pointed at a closed port |
+| Rejection cases | Met: stale source, tampered plan id, path-traversal plan id, zero budget, missing plan, missing credential |
+| Rollback | Met: the previous approved plan is restored; plan files stay as evidence |
+| Reproducibility | `rune verify` rebuilds in a fresh target directory and compares digests. Byte identity was shown on the fixture only, not on workspaces with dependencies or build scripts |
+| Cost ledger reconciles | Not met: no ledger exists yet |
+| One real kernel improves at least 10% under the independent gate | Not met: needs Phases 2 to 3 |
+| Recipe selection p95 below 10 ms | Not measurable: there is no recipe memory until RuVector retrieval lands |
 
-All four SVGs passed XML parsing, local reference checks, absence of scripts and external resources, and presence of accessible titles and reduced motion rules. All four static compositions were rendered with Sharp and visually inspected. Browser animation playback could not be tested because the local Playwright browser executable is absent. CSS animation behavior in the destination GitHub renderer remains unverified.
+`rune improve` was not run against the live OpenRouter API (no key in the build environment); only request shape, schema validation and the missing-credential exit are tested.
