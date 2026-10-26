@@ -1,6 +1,7 @@
 //! `rune` command line. Exit codes: 0 ok, 1 failure, 2 missing credentials.
 
 mod commands;
+mod propose;
 
 use clap::{Parser, Subcommand};
 use std::path::PathBuf;

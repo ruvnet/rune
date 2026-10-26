@@ -157,12 +157,19 @@ fn explain(store: &Store) -> Result<(), Failure> {
 
 fn improve(budget: &Budget) -> Result<(), Failure> {
     budget.policy().validate()?;
-    if std::env::var_os("OPENROUTER_API_KEY").is_none_or(|v| v.is_empty()) {
+    let key = std::env::var("OPENROUTER_API_KEY").unwrap_or_default();
+    if key.is_empty() {
         return Err(Failure::MissingCredentials(
             "OPENROUTER_API_KEY is not set; no request was made".into(),
         ));
     }
-    Err(Failure::Other(
-        "improve: proposal flow is Phase 2 (ADR 008) and not implemented".into(),
-    ))
+    match crate::propose::run(&key, budget.max_tokens, budget.max_seconds) {
+        Ok(report) => {
+            println!("{report}");
+            Ok(())
+        }
+        Err(()) => Err(Failure::Other(
+            "provider or schema failure; nothing was applied".into(),
+        )),
+    }
 }
