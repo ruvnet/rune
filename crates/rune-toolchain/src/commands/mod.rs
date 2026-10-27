@@ -117,6 +117,11 @@ failure_from!(
 );
 
 pub fn run(ws: &Path, cmd: Cmd) -> Result<(), Failure> {
+    // Cargo runs with this directory as cwd. Keep derived store/target paths
+    // absolute so a relative -C is never interpreted a second time by Cargo.
+    let canonical = std::fs::canonicalize(ws)
+        .map_err(|e| Failure::Other(format!("workspace {}: {e}", ws.display())))?;
+    let ws = canonical.as_path();
     let store = Store::open(ws);
     match cmd {
         Cmd::Build { freeze, budget } => build::build(ws, &store, freeze, &budget),

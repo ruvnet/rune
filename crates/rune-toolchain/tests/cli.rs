@@ -2,6 +2,23 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Output};
 
+#[test]
+fn relative_workspace_build_uses_its_own_target_directory() {
+    let d = fixture();
+    let o = Command::new(env!("CARGO_BIN_EXE_rune"))
+        .current_dir(d.path().parent().unwrap())
+        .arg("-C")
+        .arg(d.path().file_name().unwrap())
+        .args(["build", "--freeze"])
+        .output()
+        .unwrap();
+    assert!(o.status.success(), "{}", stderr(&o));
+    assert!(
+        d.path().join("target/rune/release").is_dir(),
+        "relative -C must not nest its workspace path inside itself"
+    );
+}
+
 fn fixture() -> tempfile::TempDir {
     let src = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../tests/fixtures/hello");
     let dir = tempfile::tempdir().unwrap();

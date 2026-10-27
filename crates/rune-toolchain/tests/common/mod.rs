@@ -107,6 +107,38 @@ pub fn write_report(path: &Path, r: &EvalReport) {
     fs::write(path, serde_json::to_vec_pretty(r).unwrap()).unwrap();
 }
 
+/// Test-only trusted signer. Fixed seed is public fixture material, never a deployment key.
+pub fn sign_test_report(ws: &Path, report: &Path) -> (PathBuf, PathBuf) {
+    let dir = report.parent().unwrap();
+    let key = dir.join("test-only.key");
+    let public = dir.join("test-only.pub");
+    fs::write(&key, [7u8; 32]).unwrap();
+    let signing = rune_target::sign::load_signing_key(&key).unwrap();
+    fs::write(&public, signing.verifying_key().as_bytes()).unwrap();
+    let h = history(ws);
+    let plan: rune_core::Plan = serde_json::from_slice(
+        &fs::read(ws.join(format!(".rune/plans/{}.json", h.last().unwrap()))).unwrap(),
+    )
+    .unwrap();
+    let compiler = rune_cargo::toolchain_id().unwrap();
+    let report_bytes = fs::read(report).unwrap();
+    let r: EvalReport = serde_json::from_slice(&report_bytes).unwrap();
+    let identity = rune_target::receipt::EvaluationIdentity {
+        schema: rune_target::receipt::SCHEMA.into(),
+        report_sha256: rune_core::hex_sha256(&report_bytes),
+        baseline_digest: r.baseline_digest,
+        compiler_id: rune_core::hex_sha256(compiler.as_bytes()),
+        target_digest: rune_target::descriptors::x86_64_linux_gnu(&[]).digest(),
+        policy_digest: rune_core::hex_sha256(&serde_json::to_vec(&plan.policy).unwrap()),
+        evaluator_version: "unversioned".into(),
+        degraded: false,
+    };
+    let receipt = rune_target::receipt::EvaluationReceipt::sign(identity, &key).unwrap();
+    let path = dir.join("receipt.json");
+    fs::write(&path, serde_json::to_vec_pretty(&receipt).unwrap()).unwrap();
+    (path, public)
+}
+
 /// Every file under `dir` as (relative path, size), sorted.
 pub fn listing(dir: &Path) -> Vec<(String, u64)> {
     fn walk(base: &Path, dir: &Path, out: &mut Vec<(String, u64)>) {

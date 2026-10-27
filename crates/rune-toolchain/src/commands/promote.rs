@@ -32,6 +32,15 @@ pub struct Args {
     /// Required CPU features of the target descriptor (part of the target digest)
     #[arg(long = "cpu-feature")]
     cpu_features: Vec<String>,
+    /// Signed evaluator receipt, produced by rune eval on a trusted runner
+    #[arg(long)]
+    receipt: Option<PathBuf>,
+    /// Evaluator public key from an independently trusted source
+    #[arg(long)]
+    trusted_key: Option<PathBuf>,
+    /// Explicitly accept a receipt whose evaluator reported missing isolation
+    #[arg(long)]
+    allow_degraded_evidence: bool,
 }
 
 fn refuse(msg: impl Into<String>) -> Failure {
@@ -45,7 +54,10 @@ pub(super) fn run(ws: &Path, store: &Store, a: &Args) -> Result<(), Failure> {
         store.load(&a.plan)?
     };
     let contract = load_contract(&a.contract)?;
-    let rf = ReportFile::load(&a.report)?;
+    // Parse, authenticate and record the same byte snapshot. Never re-read a
+    // mutable report path between validation and promotion.
+    let report_bytes = fs::read(&a.report)?;
+    let rf: ReportFile = serde_json::from_slice(&report_bytes)?;
     let report = &rf.report;
 
     if report.verdict != Verdict::Accept {
@@ -96,6 +108,52 @@ pub(super) fn run(ws: &Path, store: &Store, a: &Args) -> Result<(), Failure> {
         contract_digest: contract.digest(),
         evaluator_version: rf.evaluator_version(),
     };
+    let receipt_path = a
+        .receipt
+        .as_ref()
+        .ok_or_else(|| refuse("signed evaluator receipt required"))?;
+    let trusted_key = a
+        .trusted_key
+        .as_ref()
+        .ok_or_else(|| refuse("trusted evaluator key required"))?;
+    if fs::canonicalize(trusted_key)?.starts_with(fs::canonicalize(ws)?) {
+        return Err(refuse(
+            "trusted evaluator key must be outside the candidate workspace",
+        ));
+    }
+    let receipt: rune_target::receipt::EvaluationReceipt =
+        serde_json::from_slice(&fs::read(receipt_path)?)?;
+    receipt
+        .verify(&report_bytes, trusted_key)
+        .map_err(|e| refuse(format!("untrusted evaluation: {e}")))?;
+    let signed = &receipt.identity;
+    for (field, measured, expected) in [
+        ("baseline", &signed.baseline_digest, &base.source_digest),
+        (
+            "report baseline",
+            &signed.baseline_digest,
+            &report.baseline_digest,
+        ),
+        ("compiler", &signed.compiler_id, &inputs.compiler_id),
+        ("target", &signed.target_digest, &inputs.target_digest),
+        ("policy", &signed.policy_digest, &inputs.policy_digest),
+        (
+            "evaluator",
+            &signed.evaluator_version,
+            &inputs.evaluator_version,
+        ),
+    ] {
+        if measured != expected {
+            return Err(refuse(format!(
+                "evaluated {field} does not match promotion"
+            )));
+        }
+    }
+    if signed.degraded && !a.allow_degraded_evidence {
+        return Err(refuse(
+            "degraded evaluation requires --allow-degraded-evidence",
+        ));
+    }
     let key = inputs.key_for(&report.candidate_digest);
 
     let parent = store.current_id()?;
@@ -118,7 +176,8 @@ pub(super) fn run(ws: &Path, store: &Store, a: &Args) -> Result<(), Failure> {
         "inputs": inputs,
         "candidate_digest": report.candidate_digest,
         "baseline_digest": report.baseline_digest,
-        "report_sha256": hex_sha256(&fs::read(&a.report)?),
+        "report_sha256": hex_sha256(&report_bytes),
+        "receipt": receipt,
         "speedup_mean": report.speedup_mean,
         "speedup_ci95_low": report.speedup_ci95_low,
     });

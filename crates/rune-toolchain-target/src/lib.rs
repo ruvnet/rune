@@ -21,6 +21,7 @@ mod error;
 pub mod exec;
 pub mod gate;
 pub mod host;
+pub mod receipt;
 pub mod sign;
 pub mod verify;
 

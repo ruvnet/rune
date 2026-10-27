@@ -33,7 +33,8 @@ pub struct Artifact {
 }
 
 /// Build the workspace with a locked dependency graph and no network.
-/// Returns the last executable (or library) artifact Cargo reports.
+/// Selects a workspace executable (or library) deterministically. Cargo message
+/// completion order is not stable across clean and cached workspace builds.
 pub fn build(workspace: &Path, target_dir: &Path, target: Option<&str>) -> Result<Artifact, Error> {
     let mut cmd = Command::new("cargo");
     cmd.current_dir(workspace)
@@ -58,27 +59,45 @@ pub fn build(workspace: &Path, target_dir: &Path, target: Option<&str>) -> Resul
             out.status
         )));
     }
-    let path = artifact_from_messages(&String::from_utf8_lossy(&out.stdout))
+    let canonical = std::fs::canonicalize(workspace).map_err(|e| Error::io(workspace, e))?;
+    let path = artifact_from_messages(&String::from_utf8_lossy(&out.stdout), Some(&canonical))
         .ok_or_else(|| Error::Policy("cargo reported no build artifact".into()))?;
     let digest = file_digest(&path)?;
     Ok(Artifact { path, digest })
 }
 
-fn artifact_from_messages(stdout: &str) -> Option<PathBuf> {
+fn artifact_from_messages(stdout: &str, workspace: Option<&Path>) -> Option<PathBuf> {
     stdout
         .lines()
         .filter_map(|l| serde_json::from_str::<serde_json::Value>(l).ok())
         .filter(|v| v["reason"] == "compiler-artifact")
-        .filter_map(|v| {
-            v["executable"].as_str().map(PathBuf::from).or_else(|| {
-                v["filenames"]
-                    .as_array()?
-                    .first()?
+        .filter(|v| {
+            workspace.is_none_or(|root| {
+                v["manifest_path"]
                     .as_str()
-                    .map(PathBuf::from)
+                    .is_some_and(|p| Path::new(p).starts_with(root))
             })
         })
-        .next_back()
+        .filter(|v| {
+            !v["target"]["kind"]
+                .as_array()
+                .is_some_and(|ks| ks.iter().any(|k| k.as_str() == Some("custom-build")))
+        })
+        .filter_map(|v| {
+            let executable = v["executable"].as_str().map(PathBuf::from);
+            let is_executable = executable.is_some();
+            executable
+                .or_else(|| {
+                    v["filenames"]
+                        .as_array()?
+                        .first()?
+                        .as_str()
+                        .map(PathBuf::from)
+                })
+                .map(|p| (is_executable, p))
+        })
+        .max()
+        .map(|(_, p)| p)
 }
 
 #[cfg(test)]
@@ -98,6 +117,31 @@ mod tests {
     fn picks_executable_over_filenames() {
         let s = r#"{"reason":"compiler-artifact","executable":"/t/bin","filenames":["/t/lib"]}
 {"reason":"build-finished","success":true}"#;
-        assert_eq!(artifact_from_messages(s), Some(PathBuf::from("/t/bin")));
+        assert_eq!(
+            artifact_from_messages(s, None),
+            Some(PathBuf::from("/t/bin"))
+        );
+    }
+
+    #[test]
+    fn selected_artifact_does_not_depend_on_build_completion_order() {
+        let a =
+            r#"{"reason":"compiler-artifact","executable":"/t/alpha","filenames":["/t/alpha"]}"#;
+        let z = r#"{"reason":"compiler-artifact","executable":"/t/zeta","filenames":["/t/zeta"]}"#;
+        assert_eq!(
+            artifact_from_messages(&format!("{a}\n{z}"), None),
+            artifact_from_messages(&format!("{z}\n{a}"), None)
+        );
+    }
+
+    #[test]
+    fn dependencies_and_build_scripts_cannot_be_the_workspace_product() {
+        let s = r#"{"reason":"compiler-artifact","manifest_path":"/ws/member/Cargo.toml","target":{"kind":["bin"]},"executable":"/t/app","filenames":[]}
+{"reason":"compiler-artifact","manifest_path":"/cache/dep/Cargo.toml","target":{"kind":["bin"]},"executable":"/t/zzz-dependency","filenames":[]}
+{"reason":"compiler-artifact","manifest_path":"/ws/member/Cargo.toml","target":{"kind":["custom-build"]},"executable":"/t/zzz-build-script","filenames":[]}"#;
+        assert_eq!(
+            artifact_from_messages(s, Some(Path::new("/ws"))),
+            Some(PathBuf::from("/t/app"))
+        );
     }
 }

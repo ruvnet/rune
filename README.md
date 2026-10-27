@@ -11,7 +11,7 @@
 
 <p align="center"><a href="#quick-start">Quick start</a> · <a href="#what-it-does">What it does</a> · <a href="#measured-results">Measured results</a> · <a href="#safety-model">Safety</a> · <a href="#status">Status</a> · <a href="#architecture-decisions">ADRs</a></p>
 
-Rune is a learning toolchain for Rust that wraps Cargo. A normal build replays a frozen, content-addressed plan with no model call and no network. Exploring faster implementations is a separate, budgeted step, and nothing a model proposes is promoted until an independent evaluator accepts it.
+Rune is a learning toolchain for Rust that wraps Cargo. A normal build replays a frozen, content-addressed plan with no model call and Cargo dependency resolution in offline mode. Existing build scripts remain trusted host code. Exploring faster implementations is a separate, budgeted step, and nothing a model proposes is promoted until an independent evaluator accepts it.
 
 > **Naming.** The binary is `rune`; the crates.io package is `rune-toolchain`, because `rune` and `rune-cli` belong to the Rune scripting language. If you also have `rune-cli` installed, the two binaries collide on `$PATH`.
 
@@ -83,7 +83,7 @@ Read the numbers with these caveats. The CI width reflects variance within one s
 - **Explicit gates, not a score.** New `unsafe`, new dependencies, new `build.rs` or proc-macros, and new capabilities (`std::net`, `std::process`, filesystem writes, `env`) each reject on their own.
 - **Statistics.** At least 30 paired, interleaved samples after warmup; the lower bound of the 95% CI of the speedup must exceed `1 + min_improvement`; guard benchmarks must not regress beyond their tolerance.
 - **Honest isolation.** Candidate runs use a timeout, `prlimit` memory and CPU limits, a network namespace and a scrubbed environment, and the report lists the layers actually applied. The workspace copy is a plain copy unless the filesystem supports reflinks. This is not a hardened sandbox; build scripts and proc-macros are untrusted code.
-- **Promotion trust.** `rune promote` checks that the report is an Accept, that its contract digest matches, and that its candidate digest equals the workspace tree being promoted. Evaluation reports are not yet signed, so anyone who can write a self-consistent report file can forge an Accept; run the evaluator from a trusted account and keep reports out of the candidate's reach.
+- **Promotion trust.** `rune promote` requires an Ed25519 evaluator receipt and an independently supplied `--trusted-key` outside the candidate workspace. It authenticates the exact report bytes and compares measured baseline, compiler, native target, policy and evaluator identity before approving the candidate. `rune eval --signing-key KEY --receipt-out RECEIPT --out REPORT` produces receipts on a trusted native runner. Missing isolation requires explicit opt in at evaluation and promotion. The signing account remains trusted; this does not safely sandbox hostile build scripts or protect a signing key from processes running as that account. See ADR 011.
 - **Cost control.** Budgets are reserved before any paid call, tracked in exact micro-dollars, and overruns are recorded rather than hidden.
 - **Reversible cleanup.** Only generated objects recorded in an ownership manifest can be collected. Unreachable ones are quarantined for seven days; file age never authorizes deleting source. Rollback plans keep their artifacts.
 - **Supply chain.** CI runs `cargo audit` and `cargo deny` with an explicit license allowlist.
@@ -122,9 +122,9 @@ Implemented and tested: everything in the tables above. Not done, and not claime
 
 - **MetaHarness and AgenticOW.** Neither is integrated. MetaHarness exposes no performance-evaluation API, and AgenticOW is a copy-on-write vector store for agent memory, not a workspace sandbox. Rune ships its own evaluator and workspace behind an `Evaluator` trait so an adapter can be added.
 - **RuVector ranking.** An optional `ruvector` feature ranks with `ruvector-core` HNSW. It is off by default because that dependency tree needs Rust 1.89.
-- **Learning claim.** Not demonstrated. A preregistered control study (34 kernels, 8 recipes, 111 real evaluations) returned `Insufficient`: the learned library held 3 recipes, equal to the budget, so retrieval and random choice evaluated the same recipes. Treat "learning helps" as unproven; `study/RESULT.md` has the numbers and the next-step design.
+- **Learning claim.** Scoped evidence now exists for memory based selection within twelve synthetic sorting contexts: frozen training memory selected a validated improvement in 53.5% of 288 fresh input cases, versus 35.5% for random choice and 36.8% for the training selected fixed algorithm. The prospective confirmation passed its frozen confidence and significance gates. The earlier 34-kernel study remains `Insufficient`, and the 36-case sorting pilot remains `NoDifference`. See [proof and limits](docs/validation/PROOF.md), [confirmation protocol](study-transfer-confirm/PREREGISTRATION.md) and [result](study-transfer-confirm/result.json). Generalization to independent kernel families and production optimization remains unproven.
 - **Real hardware.** No aarch64 hardware was available; aarch64 and WASM results are emulator or foreign-runtime correctness evidence.
-- **Release gate.** The target gate (an unchanged workspace builds, a real kernel improves at least 10% under the independent gate, replay works with agents disabled) is met on a fixture crate, not on a large real-world workspace with dependencies and build scripts. Byte-identical rebuilds were shown on the fixture only.
+- **Release gate.** Fixture gates pass, and a snapshot of Rune's own workspace with real dependencies now builds through plain Cargo and Rune with an identical selected product; a fresh rebuild reproduces its digest. This checks one selected product, with the observed workspace and toolchain. See [proof](docs/validation/PROOF.md).
 - **Compiler integration.** Rune reuses rustc and Cargo. MIR passes and a compiler fork are out of scope.
 
 ## Architecture decisions
@@ -139,6 +139,8 @@ Implemented and tested: everything in the tables above. Not done, and not claime
 * [ADR 008: Delivery gates and economic acceptance](docs/adr/008-delivery-economics.md)
 * [ADR 009: Rune identity and visual language](docs/adr/009-rune-identity.md)
 * [ADR 010: rGi as an optional campaign supervisor](docs/adr/010-rgi-supervisor.md)
+* [ADR 011: Authenticated evaluator provenance](docs/adr/011-authenticated-evaluation.md)
+* [ADR 012: Stable workspace product and path selection](docs/adr/012-stable-workspace-product.md)
 
 [Validation receipts and source provenance](docs/VALIDATION.md)
 

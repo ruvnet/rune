@@ -1,0 +1,330 @@
+{
+  "contract_digest": "ad359caab5376339c22e943029d1bd4deb2eba745245f677238c208a026d3ab3",
+  "baseline_digest": "bb346dbe385e65c0b98403bd4ba4ffc1d47ed5a930429dd1cb031fef1e6f0f37",
+  "candidate_digest": "be54333062282eadab85c92eb7e462c8cd2d290088e5bd47aad2d5d417e59b83",
+  "samples": 40,
+  "speedup_mean": 0.01869944352033126,
+  "speedup_ci95_low": 0.017849188677954188,
+  "speedup_ci95_high": 0.01959020066844498,
+  "verdict": {
+    "status": "reject",
+    "reject": {
+      "reason": "insufficient_improvement",
+      "detail": "primary: speedup 95% CI lower bound 0.0178 does not exceed 1.1000 (geo-mean 0.0187, CI [0.0178, 0.0196], n=40)"
+    }
+  },
+  "isolation": [
+    "cpu-pin(core 3)",
+    "env-scrub",
+    "plain-copy(no-reflink)",
+    "rlimit-as",
+    "rlimit-cpu",
+    "timeout"
+  ],
+  "evidence": {
+    "evaluator": "rune-eval 0.2.0 (Rune's own evaluator; not MetaHarness)",
+    "evaluator_exe_sha256": "7cf987dbced3c3e5661f7fe32aeb65fa59fb02d0211c63c033732eaa968b5056",
+    "contract_file_sha256": "9c2e5b6fc46540204ecbbcebeaa02f4652c749fb409d8773a12be40e3c12cf1f",
+    "holdout_tree_sha256": "2e36cfee1a5e7cec49e3d64299a12e2bee3b20464cd1715fba1cca97a65e9a8c",
+    "rules": [
+      "paired samples: warmup pairs discarded, then >= contract.samples (min 30) pairs; order alternates every pair",
+      "speedup = baseline_ns / candidate_ns per pair; reported mean is the geometric mean; 95% CI is a Student-t interval on ln(speedup)",
+      "improvement gate: CI lower bound must be strictly greater than 1 + min_improvement",
+      "guard gate (non-inferiority): CI lower bound of the speed ratio must be >= 1 - tolerance; a guard too noisy to show this fails",
+      "bootstrap (10000 resamples, percentile) recorded as a cross-check, never used to decide",
+      "static security gates run before any candidate code is built or executed",
+      "timeouts and missing evidence reject"
+    ],
+    "isolation_unavailable": [
+      "netns: `unshare -rn` unavailable (user namespaces disabled?)"
+    ],
+    "fork_mode": "plain_copy",
+    "pinning": {
+      "core": 3,
+      "idle_fraction": 0.9615384615384616
+    },
+    "load_before": {
+      "loadavg_1m": 8.79,
+      "cpus": 1
+    },
+    "load_after": {
+      "loadavg_1m": 8.81,
+      "cpus": 1
+    },
+    "gates": {
+      "results": [
+        {
+          "gate": "unsafe",
+          "enforced": true,
+          "passed": true,
+          "findings": []
+        },
+        {
+          "gate": "dependencies",
+          "enforced": true,
+          "passed": true,
+          "findings": []
+        },
+        {
+          "gate": "build-surface",
+          "enforced": true,
+          "passed": true,
+          "findings": []
+        },
+        {
+          "gate": "capabilities",
+          "enforced": true,
+          "passed": true,
+          "findings": []
+        }
+      ]
+    },
+    "steps": [
+      {
+        "name": "baseline:build",
+        "ok": true,
+        "seconds": 0.503465309
+      },
+      {
+        "name": "baseline:visible",
+        "ok": true,
+        "seconds": 0.147378918
+      },
+      {
+        "name": "baseline:holdout",
+        "ok": true,
+        "seconds": 0.218345372
+      },
+      {
+        "name": "candidate:build",
+        "ok": true,
+        "seconds": 0.572500944
+      },
+      {
+        "name": "candidate:visible",
+        "ok": true,
+        "seconds": 0.104357798
+      },
+      {
+        "name": "candidate:holdout",
+        "ok": true,
+        "seconds": 0.310787259
+      },
+      {
+        "name": "bench:primary",
+        "ok": true,
+        "seconds": 0.573067414
+      },
+      {
+        "name": "bench:n_plus_7",
+        "ok": true,
+        "seconds": 0.710130754
+      }
+    ],
+    "metrics": [
+      {
+        "name": "primary",
+        "role": "improvement",
+        "pairs": 40,
+        "warmup_pairs": 5,
+        "geo_mean_speedup": 0.01869944352033126,
+        "arith_mean_speedup": 0.01889836820204042,
+        "ci95_low": 0.017849188677954188,
+        "ci95_high": 0.01959020066844498,
+        "bootstrap_ci95_low": 0.01790988676263773,
+        "bootstrap_ci95_high": 0.019567922365034296,
+        "baseline_median_ns": 438.91015,
+        "candidate_median_ns": 24374.6875,
+        "threshold": "CI lower bound > 1.1000",
+        "passed": false,
+        "baseline_ns": [
+          426.3711,
+          437.8535,
+          344.4639,
+          340.9727,
+          341.3633,
+          407.1338,
+          347.0264,
+          360.1123,
+          341.3047,
+          344.0039,
+          338.3799,
+          339.6602,
+          361.6377,
+          358.5664,
+          342.7129,
+          390.3125,
+          468.3867,
+          445.4629,
+          440.2988,
+          451.8965,
+          442.627,
+          446.9688,
+          455.9082,
+          450.0977,
+          338.7422,
+          434.1758,
+          443.0371,
+          455.5156,
+          440.1621,
+          454.3242,
+          439.9668,
+          441.2363,
+          462.7129,
+          459.3516,
+          452.1523,
+          448.0039,
+          445.7363,
+          461.1113,
+          419.3008,
+          339.3477
+        ],
+        "candidate_ns": [
+          25155.875,
+          17084.5625,
+          17096.5,
+          17201.0,
+          20821.3125,
+          19844.9375,
+          17234.8125,
+          17835.6875,
+          17105.875,
+          17167.1875,
+          17191.0,
+          17246.75,
+          17299.25,
+          17267.375,
+          17175.5,
+          17289.25,
+          17338.0625,
+          25260.4375,
+          24889.25,
+          25811.875,
+          27523.125,
+          26890.875,
+          26519.125,
+          25318.0,
+          24791.625,
+          26171.75,
+          26225.0,
+          23834.5625,
+          25085.125,
+          25377.375,
+          25483.875,
+          24780.25,
+          26477.875,
+          27224.0,
+          25855.0,
+          26770.75,
+          26573.0,
+          18872.1875,
+          17222.3125,
+          23969.125
+        ]
+      },
+      {
+        "name": "n_plus_7",
+        "role": "guard",
+        "pairs": 40,
+        "warmup_pairs": 5,
+        "geo_mean_speedup": 0.02547787250867357,
+        "arith_mean_speedup": 0.025651641629028443,
+        "ci95_low": 0.02453227045861819,
+        "ci95_high": 0.026459923008886763,
+        "bootstrap_ci95_low": 0.02457569001269687,
+        "bootstrap_ci95_high": 0.026412205261861048,
+        "baseline_median_ns": 682.18845,
+        "candidate_median_ns": 26526.0,
+        "threshold": "CI lower bound >= 0.9000",
+        "passed": false,
+        "baseline_ns": [
+          602.1582,
+          613.3281,
+          641.9629,
+          606.4434,
+          426.1953,
+          470.9297,
+          426.7422,
+          427.5645,
+          435.9375,
+          435.8965,
+          484.8555,
+          586.9609,
+          739.1367,
+          696.75,
+          684.7988,
+          671.3223,
+          691.8613,
+          693.0742,
+          625.748,
+          656.7109,
+          689.3574,
+          683.7637,
+          463.5352,
+          646.2852,
+          697.0625,
+          693.9141,
+          697.084,
+          682.5703,
+          681.8066,
+          691.6055,
+          697.084,
+          692.4863,
+          710.1113,
+          693.0117,
+          630.4238,
+          639.9297,
+          693.4668,
+          694.0332,
+          700.6055,
+          698.1797
+        ],
+        "candidate_ns": [
+          24022.875,
+          24069.25,
+          24086.1875,
+          18461.625,
+          17122.1875,
+          17158.4375,
+          17129.0625,
+          17125.9375,
+          17124.6875,
+          18052.875,
+          17135.3125,
+          26359.5,
+          23916.0,
+          24747.75,
+          27630.75,
+          27439.25,
+          25120.875,
+          27956.25,
+          27972.5625,
+          23850.125,
+          27952.5,
+          25874.375,
+          27937.5,
+          26589.25,
+          27941.25,
+          27133.75,
+          27198.875,
+          28013.875,
+          28058.875,
+          28046.5,
+          28071.375,
+          18979.25,
+          27961.25,
+          27956.25,
+          28027.625,
+          28006.375,
+          25210.875,
+          26868.375,
+          26462.75,
+          27963.75
+        ]
+      }
+    ],
+    "notes": [
+      "host load 8.79 on 1 cpus before measuring"
+    ]
+  }
+}
