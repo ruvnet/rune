@@ -15,6 +15,10 @@ Rune is a learning toolchain for Rust that wraps Cargo. A normal build replays a
 
 > **Naming.** The binary is `rune`; the crates.io package is `rune-toolchain`, because `rune` and `rune-cli` belong to the Rune scripting language. If you also have `rune-cli` installed, the two binaries collide on `$PATH`.
 
+## Release status
+
+0.3.0 is prepared for release. Publishing requires the remaining release gates and registry authentication. [Migration and release procedure](docs/RELEASE-0.3.0.md).
+
 ## Quick start
 
 ```sh
