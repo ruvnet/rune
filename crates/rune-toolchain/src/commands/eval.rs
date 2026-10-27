@@ -35,6 +35,12 @@ pub struct Args {
     /// CARGO_HOME for the sandboxed runs (default: inside the scratch directory)
     #[arg(long)]
     cargo_home: Option<PathBuf>,
+    /// Trusted runner signing key, outside the workspace and both source trees
+    #[arg(long, requires_all = ["receipt_out", "out"])]
+    signing_key: Option<PathBuf>,
+    /// Write a signed provenance receipt; never creates or configures a trust anchor
+    #[arg(long, requires = "signing_key")]
+    receipt_out: Option<PathBuf>,
 }
 
 fn scratch() -> PathBuf {
@@ -47,6 +53,48 @@ fn scratch() -> PathBuf {
 
 pub(super) fn run(ws: &Path, store: &Store, a: &Args) -> Result<(), Failure> {
     let contract = load_contract(&a.contract)?;
+    let identity = if let Some(key) = &a.signing_key {
+        let key = fs::canonicalize(key)?;
+        for dir in [ws, a.baseline.as_path(), a.candidate.as_path()] {
+            if key.starts_with(fs::canonicalize(dir)?) {
+                return Err(Failure::Other(
+                    "signing key must be outside workspace and source trees".into(),
+                ));
+            }
+        }
+        for tree in [&a.baseline, &a.candidate] {
+            if tree.join(".cargo/config").exists() || tree.join(".cargo/config.toml").exists() {
+                return Err(Failure::Other(
+                    "signed native evaluation does not support Cargo config overrides".into(),
+                ));
+            }
+        }
+        let base = store.current()?;
+        let baseline = rune_core::tree_digest(&a.baseline)?;
+        if baseline != base.source_digest {
+            return Err(Failure::Other(
+                "signed evaluation baseline must match approved plan".into(),
+            ));
+        }
+        let compiler = rune_cargo::toolchain_id()?;
+        let host = compiler
+            .lines()
+            .find_map(|l| l.strip_prefix("host: "))
+            .ok_or_else(|| Failure::Other("compiler host identity missing".into()))?;
+        let target = super::common::descriptor(host, &[])?;
+        Some(rune_target::receipt::EvaluationIdentity {
+            schema: rune_target::receipt::SCHEMA.into(),
+            report_sha256: String::new(),
+            baseline_digest: baseline,
+            compiler_id: rune_core::hex_sha256(compiler.as_bytes()),
+            target_digest: target.digest(),
+            policy_digest: super::common::policy_digest(&base.policy),
+            evaluator_version: String::new(),
+            degraded: false,
+        })
+    } else {
+        None
+    };
     let (workdir, temp) = match &a.workdir {
         Some(w) => (w.clone(), false),
         None => (scratch(), true),
@@ -60,6 +108,31 @@ pub(super) fn run(ws: &Path, store: &Store, a: &Args) -> Result<(), Failure> {
     }
     let full = result?;
     let json = serde_json::to_string_pretty(&full)?;
+    if let Some(mut identity) = identity {
+        if full.report.baseline_digest != identity.baseline_digest
+            || rune_core::tree_digest(&a.baseline)? != full.report.baseline_digest
+            || rune_core::tree_digest(&a.candidate)? != full.report.candidate_digest
+            || super::common::compiler_id()? != identity.compiler_id
+        {
+            return Err(Failure::Other(
+                "evaluation inputs changed; refusing to sign".into(),
+            ));
+        }
+        identity.report_sha256 = rune_core::hex_sha256(json.as_bytes());
+        identity.evaluator_version = full.evidence.evaluator.clone();
+        identity.degraded = !full.evidence.isolation_unavailable.is_empty();
+        let receipt = rune_target::receipt::EvaluationReceipt::sign(
+            identity,
+            a.signing_key.as_ref().expect("checked above"),
+        )
+        .map_err(|e| Failure::Other(format!("sign evaluation: {e}")))?;
+        fs::write(
+            a.receipt_out
+                .as_ref()
+                .expect("clap requires receipt output"),
+            serde_json::to_vec_pretty(&receipt)?,
+        )?;
+    }
     match &a.out {
         Some(p) => {
             fs::write(p, &json).map_err(|e| Failure::Other(format!("{}: {e}", p.display())))?

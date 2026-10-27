@@ -76,6 +76,33 @@ pub fn sign_manifest(key: &SigningKey, manifest: &[u8]) -> SigFile {
     }
 }
 
+/// Separate signature domain: an artifact signature cannot authorize promotion.
+pub fn sign_evaluation(key: &SigningKey, payload: &[u8]) -> SigFile {
+    let mut msg = b"rune.evaluation/1\0".to_vec();
+    msg.extend_from_slice(payload);
+    let sig = key.sign(&msg);
+    SigFile {
+        alg: ALG.into(),
+        public_key: to_hex(key.verifying_key().as_bytes()),
+        signature: to_hex(&sig.to_bytes()),
+    }
+}
+
+pub fn verify_evaluation(key: &VerifyingKey, sig: &SigFile, payload: &[u8]) -> Result<(), Error> {
+    if sig.alg != ALG || sig.public_key != to_hex(key.as_bytes()) {
+        return Err(Error::Verify(
+            "evaluation signer is not the trusted key".into(),
+        ));
+    }
+    let bytes: [u8; 64] = from_hex(&sig.signature)?
+        .try_into()
+        .map_err(|_| Error::Verify("signature must be 64 bytes".into()))?;
+    let mut msg = b"rune.evaluation/1\0".to_vec();
+    msg.extend_from_slice(payload);
+    key.verify_strict(&msg, &Signature::from_bytes(&bytes))
+        .map_err(|_| Error::Verify("evaluation signature mismatch".into()))
+}
+
 /// Verify `sig` over `manifest` with `key` (strict: rejects malleable forms).
 pub fn verify_manifest(key: &VerifyingKey, sig: &SigFile, manifest: &[u8]) -> Result<(), Error> {
     if sig.alg != ALG {

@@ -112,8 +112,26 @@ fn accepted_report_promotes_binds_the_key_and_rolls_back() {
     let scratch = tempfile::tempdir().unwrap();
     let first = history(d.path());
     let rp = scratch.path().join("report.json");
-    write_report(&rp, &accept_report(&tree));
-    let s = ok(&promote(d.path(), &rp));
+    let mut report = accept_report(&tree);
+    report.baseline_digest = tree.clone();
+    write_report(&rp, &report);
+    let (receipt, public) = sign_test_report(d.path(), &rp);
+    let s = ok(&rune(
+        d.path(),
+        &[
+            "promote",
+            "--report",
+            rp.to_str().unwrap(),
+            "--contract",
+            contract_path().to_str().unwrap(),
+            "--target",
+            "x86_64",
+            "--receipt",
+            receipt.to_str().unwrap(),
+            "--trusted-key",
+            public.to_str().unwrap(),
+        ],
+    ));
     assert!(s.contains("approval key"), "{s}");
     let h = history(d.path());
     assert_eq!(h.len(), 2);
