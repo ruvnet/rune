@@ -1,4 +1,4 @@
-<p align="center"><img src="assets/rune-hero.svg" width="100%" alt="Rune. The learning toolchain for Rust." /></p>
+<p align="center"><a href="https://ruvnet.github.io/rune/"><img src="assets/rune-hero.svg" width="100%" alt="Rune. The learning toolchain for Rust. Open the interactive explainer." /></a></p>
 
 <p align="center"><strong>Source becomes software. Evidence earns promotion.</strong></p>
 
