@@ -1,0 +1,349 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#10151a">
+  <meta name="description" content="An animated, evidence-led explainer of Rune: the learning toolchain for Rust.">
+  <meta property="og:title" content="Rune — Source becomes software. Evidence earns promotion.">
+  <meta property="og:description" content="A scroll-driven tour of deterministic builds, bounded discovery, independent evaluation, and portable evidence.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath d='M32 3 57 17v30L32 61 7 47V17Z' fill='%2312171a' stroke='%23b97549' stroke-width='2'/%3E%3Cpath d='M21 47V17l22 12-22 8m0-2 24 12' fill='none' stroke='%23ffbd70' stroke-width='4'/%3E%3C/svg%3E">
+  <title>Rune — An evidence-led explainer</title>
+  <style>
+    :root{--ink:#eee9e1;--muted:#afa69c;--void:#0b1013;--graphite:#10151a;--warm:#1f1915;--panel:#141a1e;--line:#5d4936;--line2:#76563c;--copper:#b97549;--amber:#ffbd70;--cream:#ffdfaa;--rust:#e86f51;--green:#8bbf9f;--stage:0;--progress:0%}
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth;background:var(--void);color-scheme:dark}
+    body{margin:0;background:radial-gradient(circle at 18% 8%,rgba(185,117,73,.11),transparent 30rem),linear-gradient(135deg,var(--graphite),var(--warm));color:var(--ink);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;font-synthesis:none;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;line-height:1.5;overflow-x:hidden}
+    body:before{content:"";position:fixed;inset:0;z-index:-1;background-image:linear-gradient(rgba(185,133,81,.045) 1px,transparent 1px),linear-gradient(90deg,rgba(185,133,81,.045) 1px,transparent 1px);background-size:40px 40px;mask-image:linear-gradient(to bottom,black,transparent 92%)}
+    a{color:inherit}
+    button{font:inherit}
+    .skip{position:fixed;left:1rem;top:1rem;z-index:100;transform:translateY(-160%);background:var(--cream);color:#18120f;padding:.7rem 1rem;border-radius:.5rem}.skip:focus{transform:none}
+    .progress{position:fixed;z-index:60;inset:0 0 auto;height:2px;background:#30251f}.progress:after{content:"";display:block;width:var(--progress);height:100%;background:linear-gradient(90deg,var(--copper),var(--cream));box-shadow:0 0 16px var(--amber)}
+    .topbar{position:fixed;z-index:50;top:2px;left:0;right:0;height:64px;padding:0 clamp(1rem,4vw,4rem);display:flex;align-items:center;justify-content:space-between;background:linear-gradient(180deg,rgba(11,16,19,.92),rgba(11,16,19,.66),transparent);backdrop-filter:blur(8px)}
+    .brand{display:flex;align-items:center;gap:.75rem;text-decoration:none;font-weight:700;letter-spacing:.24em;font-size:.8rem}.brand svg{width:32px;height:32px}.brand span small{display:block;color:var(--muted);font-size:.53rem;letter-spacing:.14em;font-weight:500;margin-top:.15rem}
+    .topnav{display:flex;align-items:center;gap:.65rem}.topnav a{text-decoration:none;color:var(--muted);font-size:.77rem;letter-spacing:.08em;text-transform:uppercase}.topnav a:hover,.topnav a:focus-visible{color:var(--cream)}
+    .repo{border:1px solid var(--line2);border-radius:999px;padding:.55rem .85rem!important;color:var(--ink)!important;background:rgba(20,26,30,.7)}
+    .chapter-pill{display:flex;align-items:center;gap:.5rem;color:var(--muted);font:600 .7rem/1 ui-monospace,SFMono-Regular,Consolas,monospace;letter-spacing:.12em;text-transform:uppercase}.chapter-pill i{width:7px;height:7px;border-radius:50%;background:var(--amber);box-shadow:0 0 12px var(--amber)}
+    .hero{min-height:100svh;display:grid;place-items:center;padding:7rem 5vw 3rem;position:relative;isolation:isolate}
+    .hero-inner{width:min(1200px,100%);display:grid;grid-template-columns:minmax(280px,.82fr) minmax(430px,1.18fr);gap:clamp(2rem,6vw,7rem);align-items:center}
+    .sigil-wrap{position:relative;min-height:420px;display:grid;place-items:center}.sigil-glow{position:absolute;width:58%;aspect-ratio:1;border-radius:50%;background:rgba(185,117,73,.11);filter:blur(46px)}
+    .sigil{width:min(440px,95vw);overflow:visible}.sigil .orbit{transform-origin:center;animation:spin 48s linear infinite}.sigil .flow{animation:dash 8s linear infinite}.sigil .draw{stroke-dasharray:680;animation:inscribe 6s ease-in-out infinite}.sigil .pulse{animation:pulse 3s ease-in-out infinite}.sigil .pulse:nth-of-type(2){animation-delay:-1s}.sigil .pulse:nth-of-type(3){animation-delay:-2s}
+    .eyebrow{display:flex;align-items:center;gap:.75rem;color:var(--muted);font:600 .72rem/1 ui-monospace,SFMono-Regular,Consolas,monospace;letter-spacing:.18em;text-transform:uppercase}.eyebrow:before{content:"";width:2.4rem;height:1px;background:var(--copper)}
+    h1{font-size:clamp(4.2rem,10vw,8.7rem);line-height:.85;letter-spacing:.055em;margin:1.4rem 0 1.5rem;text-wrap:balance}.hero h1 span{display:block;max-width:16ch;color:transparent;-webkit-text-stroke:1px rgba(255,223,170,.75);font-size:.29em;line-height:1.16;letter-spacing:.1em;margin-top:1.2rem;text-wrap:balance}.lede{font-size:clamp(1.2rem,2vw,1.75rem);line-height:1.4;max-width:25ch;margin:0;color:#dfd7cd;text-wrap:pretty}.lede strong{color:var(--cream);font-weight:700}
+    .hero-actions{display:flex;flex-wrap:wrap;gap:.75rem;margin-top:2rem}.button{display:inline-flex;align-items:center;gap:.65rem;text-decoration:none;border-radius:.3rem;padding:.85rem 1rem;border:1px solid var(--line2);background:rgba(20,26,30,.8);font-size:.82rem;font-weight:650;letter-spacing:.05em}.button.primary{background:var(--cream);color:#17120f;border-color:var(--cream)}.button:hover{transform:translateY(-2px);box-shadow:0 9px 28px rgba(0,0,0,.25)}
+    .scroll-cue{position:absolute;bottom:1.5rem;left:50%;display:flex;flex-direction:column;align-items:center;gap:.55rem;color:var(--muted);font:600 .62rem/1 ui-monospace,SFMono-Regular,monospace;letter-spacing:.15em;text-transform:uppercase}.scroll-cue:after{content:"";height:2rem;width:1px;background:linear-gradient(var(--amber),transparent);animation:cue 2s ease-in-out infinite}
+    .premise{padding:9rem 5vw 8rem;border-top:1px solid rgba(185,117,73,.16);border-bottom:1px solid rgba(185,117,73,.16)}.premise-inner{width:min(1100px,100%);margin:auto;display:grid;grid-template-columns:.7fr 1.3fr;gap:clamp(2rem,8vw,8rem)}.premise h2{margin:0;font:650 .75rem/1.5 ui-monospace,SFMono-Regular,monospace;letter-spacing:.16em;text-transform:uppercase;color:var(--amber)}.premise blockquote{margin:0;font-size:clamp(2rem,4.2vw,4.6rem);line-height:1.08;letter-spacing:-.035em;max-width:19ch;text-wrap:balance}.premise blockquote em{font-style:normal;color:var(--muted)}
+    .story{width:min(1440px,100%);margin:auto;display:grid;grid-template-columns:minmax(520px,1.12fr) minmax(360px,.88fr);align-items:start}
+    .stage-wrap{position:sticky;top:0;height:100svh;padding:clamp(4.5rem,8vh,7rem) clamp(1rem,4vw,4rem);display:grid;place-items:center}
+    .stage{position:relative;width:min(760px,100%);aspect-ratio:1.1;border:1px solid rgba(185,117,73,.46);border-radius:18px;overflow:hidden;background:linear-gradient(145deg,rgba(16,21,26,.98),rgba(31,25,21,.97));box-shadow:0 35px 90px rgba(0,0,0,.38),inset 0 0 80px rgba(185,117,73,.045)}
+    .stage:before{content:"";position:absolute;inset:0;background-image:linear-gradient(rgba(185,133,81,.055) 1px,transparent 1px),linear-gradient(90deg,rgba(185,133,81,.055) 1px,transparent 1px);background-size:32px 32px}.stage:after{content:"";position:absolute;z-index:10;left:0;right:0;height:90px;top:-100px;pointer-events:none;background:linear-gradient(180deg,transparent,rgba(255,189,112,.035),rgba(255,223,170,.13),transparent);animation:stageScan 8s linear infinite}.stage-label{position:absolute;z-index:12;top:1.4rem;left:1.5rem;color:#c7beb4;font:650 .66rem/1 ui-monospace,SFMono-Regular,monospace;letter-spacing:.16em;text-transform:uppercase}.scene{position:absolute;z-index:2;inset:0;visibility:hidden;opacity:0;transform:translateY(12px) scale(.98);transition:opacity .42s ease,transform .65s cubic-bezier(.2,.8,.2,1);pointer-events:none}.scene.active{visibility:visible;opacity:1;transform:none}.scene svg{width:100%;height:100%;transform:translateY(var(--drift,0px));transition:transform .12s linear}.scene text{font-family:Inter,Arial,sans-serif;fill:var(--ink)}.scene .mono{font-family:ui-monospace,SFMono-Regular,Consolas,monospace}.scene .muted{fill:#c1b8ae}.scene .tiny{font-size:12px;letter-spacing:1.6px}.scene .edge{fill:none;stroke:#604a3a;stroke-width:1.5}.scene .wire{fill:none;stroke:var(--amber);stroke-width:2;stroke-dasharray:8 16;animation:dash 5.5s linear infinite}.scene .hot{stroke:var(--cream);filter:drop-shadow(0 0 8px rgba(255,189,112,.35))}.scene .node{fill:#141a1e;stroke:#76563c;stroke-width:1.5}.scene .node.live{stroke:var(--amber);filter:drop-shadow(0 0 8px rgba(255,189,112,.14))}.scene .halo{fill:none;stroke:#9d714a;stroke-dasharray:3 10;animation:spin 28s linear infinite;transform-origin:center}.scene .halo.reverse{animation-direction:reverse;animation-duration:20s}.scene .pop{transform-origin:center;animation:pop 2.2s ease-in-out infinite}.scene .bar{transform-box:fill-box;transform-origin:center bottom;transform:scaleY(0)}.scene.active .bar{animation:barUp 1.2s cubic-bezier(.16,1,.3,1) both}.scene .packet{fill:var(--cream);filter:drop-shadow(0 0 7px var(--amber));opacity:0}.scene.active .packet.line{offset-path:path("M116 310 H584");animation:packetRun 3.2s cubic-bezier(.45,0,.55,1) infinite}.scene.active .packet.loop{offset-path:path("M175 202 H525 V420 H175 V202");animation:packetRun 5.8s linear infinite}.scene.active .packet.loop.two{animation-delay:-2.9s}.scene .hashbit{fill:var(--amber);opacity:0}.scene.active .hashbit{animation:hashIn 2.4s ease-in-out infinite}.scene.active .hashbit:nth-of-type(2n){animation-delay:-.8s}.scene.active .hashbit:nth-of-type(3n){animation-delay:-1.6s}.scene .terminal-line{opacity:0;transform:translateX(-10px)}.scene.active .terminal-line{animation:lineIn .45s ease forwards}.scene.active .terminal-line:nth-child(2){animation-delay:.12s}.scene.active .terminal-line:nth-child(3){animation-delay:.25s}.scene.active .terminal-line:nth-child(4){animation-delay:.38s}.scene.active .terminal-line:nth-child(5){animation-delay:.51s}.scene.active .terminal-line:nth-child(6){animation-delay:.68s}.scene .scan-line{opacity:0}.scene.active .scan-line{animation:shieldScan 3.4s ease-in-out infinite}.scene .gate{opacity:0;transform:translateX(-8px)}.scene.active .gate{animation:lineIn .45s ease forwards}.scene.active .gate:nth-child(2){animation-delay:.18s}.scene.active .gate:nth-child(3){animation-delay:.36s}.scene.active .gate:nth-child(4){animation-delay:.54s}.scene .orbit-node{transform-box:fill-box;transform-origin:center;animation:pulse 2.4s ease-in-out infinite}.scene .drawline{stroke-dasharray:500;stroke-dashoffset:500}.scene.active .drawline{animation:drawPath 2.1s cubic-bezier(.2,.8,.2,1) forwards}
+    .steps{position:relative;padding:20vh clamp(1.5rem,4vw,4.5rem) 20vh clamp(2.25rem,5vw,5rem)}.step{position:relative;min-height:108vh;display:flex;flex-direction:column;justify-content:center;max-width:42rem;opacity:1;color:var(--ink);transition:transform .35s ease}.step:before{content:"";position:absolute;top:50%;left:-1.5rem;width:2px;height:72px;transform:translateY(-50%);background:#4a392f;transition:background .3s ease,box-shadow .3s ease}.step.active:before{background:var(--amber);box-shadow:0 0 18px rgba(255,189,112,.55)}.step.active{opacity:1}.step .index{display:block;margin-bottom:1rem;color:var(--amber);font:650 .7rem/1 ui-monospace,SFMono-Regular,monospace;letter-spacing:.16em}.step h2{font-size:clamp(2.3rem,4vw,4.75rem);font-weight:720;line-height:.98;letter-spacing:-.035em;margin:0 0 1.6rem;max-width:12ch;color:#f4efe8;text-wrap:balance;overflow-wrap:normal;hyphens:none}.step .summary{font-size:clamp(1.05rem,1.3vw,1.25rem);font-weight:520;line-height:1.5;color:#e6ded5;max-width:34rem;margin:0 0 .8rem;text-wrap:pretty}.step .detail{font-size:clamp(.96rem,1vw,1.05rem);line-height:1.65;color:#c9c0b7;max-width:37rem;margin:.25rem 0;text-wrap:pretty}.step code{font:600 .86em ui-monospace,SFMono-Regular,Consolas,monospace;color:var(--cream);background:rgba(185,117,73,.16);padding:.13rem .35rem;border-radius:.2rem;white-space:break-spaces}.step ul{padding:0;margin:1.35rem 0 0;list-style:none;display:grid;gap:.72rem;max-width:36rem}.step li{display:grid;grid-template-columns:1.1rem minmax(0,1fr);gap:.65rem;color:#c9c0b7;font-size:.96rem;line-height:1.5;text-wrap:pretty}.step li:before{content:"";width:8px;height:8px;margin-top:.42rem;transform:rotate(45deg);border:1px solid var(--copper)}.keep-line{white-space:nowrap}.truth-note{max-width:36rem;margin-top:1.35rem;border-left:2px solid var(--copper);padding:.15rem 0 .15rem 1rem;color:#c9c0b7;font-size:.92rem;line-height:1.55;text-wrap:pretty}.truth-note strong{color:var(--ink)}
+    .learning-deep{padding:10rem 5vw;background:linear-gradient(180deg,rgba(9,13,16,.25),rgba(9,13,16,.78),rgba(9,13,16,.32));border-top:1px solid rgba(185,117,73,.18)}.learning-inner{width:min(1180px,100%);margin:auto}.learning-title{display:grid;grid-template-columns:1.1fr .9fr;gap:clamp(2rem,8vw,7rem);align-items:end;margin:1rem 0 4.5rem}.learning-title h2{font-size:clamp(3rem,5.7vw,6.5rem);line-height:.94;letter-spacing:-.045em;margin:0;max-width:10ch;text-wrap:balance}.learning-title p{color:#c9c0b7;font-size:clamp(1rem,1.25vw,1.2rem);line-height:1.65;margin:0;text-wrap:pretty}.learning-title strong{color:var(--cream)}
+    .boundary-card{display:grid;grid-template-columns:auto 1fr auto;gap:1.5rem;align-items:center;padding:1.4rem 1.6rem;margin-bottom:1px;background:#11171a;border:1px solid rgba(185,117,73,.28)}.boundary-mark{display:grid;place-items:center;width:54px;aspect-ratio:1;border:1px solid var(--copper);transform:rotate(30deg)}.boundary-mark span{transform:rotate(-30deg);color:var(--amber);font:700 1.3rem ui-monospace,monospace}.boundary-card h3{font-size:1.05rem;margin:0 0 .3rem}.boundary-card p{color:#bdb4ab;line-height:1.55;margin:0;text-wrap:pretty}.boundary-card b{color:#8bbf9f;font:650 .68rem ui-monospace,monospace;letter-spacing:.12em;text-transform:uppercase;white-space:nowrap}
+    .learning-system{display:grid;grid-template-columns:minmax(360px,.9fr) minmax(460px,1.1fr);gap:1px;margin-top:1px;background:rgba(185,117,73,.2);border:1px solid rgba(185,117,73,.2)}.learning-visual{position:sticky;top:90px;align-self:start;min-height:690px;display:grid;place-items:center;background:linear-gradient(145deg,#10161a,#181713);overflow:hidden}.learning-visual:before{content:"";position:absolute;inset:0;background-image:linear-gradient(rgba(185,133,81,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(185,133,81,.05) 1px,transparent 1px);background-size:32px 32px}.learning-visual svg{position:relative;width:92%;height:auto;overflow:visible}.memory-ring{transform-origin:center;animation:spin 32s linear infinite}.memory-ring.reverse{animation-direction:reverse;animation-duration:22s}.memory-pulse{animation:pulse 2.8s ease-in-out infinite}.memory-pulse:nth-of-type(2){animation-delay:-.9s}.memory-pulse:nth-of-type(3){animation-delay:-1.8s}.memory-flow{stroke-dasharray:7 14;animation:dash 5s linear infinite}.learning-steps{background:#10151a;padding:0 2.2rem}.learn-step{display:grid;grid-template-columns:3.2rem 1fr;gap:1.1rem;padding:2rem 0;border-bottom:1px solid #302821}.learn-step:last-child{border-bottom:0}.learn-step .num{display:grid;place-items:center;width:2.6rem;height:2.6rem;border:1px solid #76563c;color:var(--amber);font:650 .72rem ui-monospace,monospace}.learn-step h3{font-size:1.25rem;margin:.08rem 0 .45rem}.learn-step p{color:#bdb4ab;line-height:1.6;margin:0;text-wrap:pretty}.learn-step code{color:var(--cream);font-size:.86em}.learn-step small{display:block;color:#8b827a;font-size:.75rem;line-height:1.5;margin-top:.65rem}
+    .learning-proof{display:grid;grid-template-columns:1.1fr .9fr;gap:1px;margin-top:1px;background:rgba(185,117,73,.2);border:1px solid rgba(185,117,73,.2)}.proof-number,.proof-copy{background:#11171a;padding:clamp(1.7rem,4vw,3.6rem)}.proof-number strong{display:block;color:var(--cream);font-size:clamp(4.2rem,8vw,8.5rem);line-height:.82;letter-spacing:-.06em}.proof-number span{display:block;color:var(--amber);font:650 .7rem ui-monospace,monospace;letter-spacing:.14em;margin-top:1.3rem;text-transform:uppercase}.proof-copy h3{font-size:clamp(1.6rem,2.8vw,2.8rem);line-height:1.05;margin:0 0 1rem;text-wrap:balance}.proof-copy p{color:#bdb4ab;line-height:1.65;margin:0;text-wrap:pretty}.proof-copy .scope{margin-top:1.3rem;padding-left:1rem;border-left:2px solid var(--copper);font-size:.86rem;color:#918880}
+    .difference{padding:10rem 5vw;background:#0b1013;border-block:1px solid rgba(185,117,73,.18)}.difference-inner{width:min(1180px,100%);margin:auto}.difference-title{display:grid;grid-template-columns:1fr 1fr;gap:clamp(2rem,8vw,8rem);align-items:end;margin:1rem 0 3.5rem}.difference-title h2{font-size:clamp(3rem,5.5vw,6rem);line-height:.95;letter-spacing:-.045em;margin:0;max-width:10ch;text-wrap:balance}.difference-title p{color:#c9c0b7;font-size:1.1rem;line-height:1.65;margin:0;text-wrap:pretty}.compare-wrap{overflow-x:auto;border:1px solid rgba(185,117,73,.25)}.compare{width:100%;border-collapse:collapse;min-width:850px;background:#10151a}.compare th,.compare td{padding:1.25rem 1.1rem;text-align:left;vertical-align:top;border-bottom:1px solid #302821;border-right:1px solid #302821}.compare th:last-child,.compare td:last-child{border-right:0}.compare tr:last-child td{border-bottom:0}.compare th{color:var(--amber);font:650 .68rem ui-monospace,monospace;letter-spacing:.12em;text-transform:uppercase;background:#0d1215}.compare td{color:#bbb2aa;font-size:.88rem;line-height:1.55}.compare td:first-child{color:var(--ink);font-weight:700;width:16%}.compare tr.rune-row td{background:rgba(185,117,73,.08);color:#ddd5cc}.compare tr.rune-row td:first-child{color:var(--cream)}
+    .advantage-title{font-size:clamp(2rem,4vw,4rem);line-height:1;margin:6rem 0 2.2rem;letter-spacing:-.035em;text-wrap:balance}.advantage-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:rgba(185,117,73,.2);border:1px solid rgba(185,117,73,.2)}.advantage{min-height:220px;padding:1.6rem;background:#10151a}.advantage b{color:var(--copper);font:650 .65rem ui-monospace,monospace;letter-spacing:.12em}.advantage h3{font-size:1.25rem;margin:.85rem 0 .65rem}.advantage p{color:#bdb4ab;font-size:.9rem;line-height:1.6;margin:0;text-wrap:pretty}.limits{display:grid;grid-template-columns:.7fr 1.3fr;gap:2rem;margin-top:2.5rem;padding:1.5rem;border:1px solid #44352b;background:#0e1316}.limits strong{color:var(--amber);font:650 .7rem ui-monospace,monospace;letter-spacing:.12em;text-transform:uppercase}.limits p{color:#aaa19a;line-height:1.65;margin:0;text-wrap:pretty}
+    .interlude{padding:9rem 5vw;background:rgba(9,13,16,.55);border-block:1px solid rgba(185,117,73,.16)}.interlude-inner{width:min(1180px,100%);margin:auto}.interlude h2{font-size:clamp(2.4rem,4.6vw,5rem);letter-spacing:-.035em;line-height:1.02;margin:.8rem 0 3rem;max-width:12ch;text-wrap:balance}.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:rgba(185,117,73,.22);border:1px solid rgba(185,117,73,.22)}.stat{padding:clamp(1.3rem,3vw,2.6rem);background:var(--graphite);min-height:195px}.stat strong{display:block;color:var(--cream);font-size:clamp(2.2rem,3.6vw,4.3rem);line-height:1;letter-spacing:-.035em}.stat span{display:block;color:#c4bbb2;font-size:.88rem;line-height:1.5;margin-top:1rem;text-wrap:pretty}.stat small{display:block;color:#8e8680;font-size:.72rem;line-height:1.45;margin-top:.8rem}.caveat{display:grid;grid-template-columns:.7fr 1.3fr;gap:2rem;margin-top:2.6rem;color:#bdb4ab;line-height:1.65}.caveat strong{color:var(--ink);font:650 .72rem/1.4 ui-monospace,SFMono-Regular,monospace;letter-spacing:.14em;text-transform:uppercase}.caveat p{margin:0;text-wrap:pretty}
+    .quickstart{padding:10rem 5vw}.quick-inner{width:min(1100px,100%);margin:auto;display:grid;grid-template-columns:.78fr 1.22fr;gap:clamp(2rem,7vw,7rem);align-items:start}.quickstart h2{font-size:clamp(2.8rem,5vw,5.5rem);line-height:.94;letter-spacing:-.04em;margin:1rem 0}.quickstart p{color:var(--muted);max-width:32rem}.terminal{background:#090d10;border:1px solid var(--line);border-radius:14px;overflow:hidden;box-shadow:0 24px 70px rgba(0,0,0,.34)}.terminal-head{display:flex;align-items:center;gap:.45rem;padding:1rem;border-bottom:1px solid #2e2925;color:var(--muted);font:600 .68rem ui-monospace,monospace;letter-spacing:.12em}.terminal-head i{width:8px;height:8px;border:1px solid #76563c;border-radius:50%}.terminal pre{margin:0;padding:clamp(1.2rem,3vw,2rem);overflow:auto;color:#d8d1c9;font:500 clamp(.77rem,1.3vw,.95rem)/1.9 ui-monospace,SFMono-Regular,Consolas,monospace}.terminal .prompt{color:var(--amber)}.terminal .comment{color:#706b66}.terminal .ok{color:var(--green)}
+    .architecture{padding:3rem 5vw 10rem}.arch-inner{width:min(1180px,100%);margin:auto}.architecture h2{font-size:clamp(2.5rem,4.6vw,4.8rem);line-height:1.02;letter-spacing:-.035em;margin:1rem 0 3rem;text-wrap:balance}.crate-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:rgba(185,117,73,.2);border:1px solid rgba(185,117,73,.2)}.crate{background:rgba(16,21,26,.96);padding:1.4rem;min-height:180px;position:relative;overflow:hidden}.crate:after{content:"";position:absolute;right:-1.8rem;bottom:-2.4rem;width:5.5rem;aspect-ratio:1;border:1px solid rgba(185,117,73,.12);transform:rotate(30deg)}.crate code{display:block;color:var(--cream);font-size:.8rem;line-height:1.45;overflow-wrap:anywhere}.crate p{color:#bdb4ab;font-size:.86rem;line-height:1.55;margin:.85rem 0 0;text-wrap:pretty}.crate b{display:block;color:var(--copper);font:650 .64rem ui-monospace,monospace;letter-spacing:.1em;margin-bottom:.55rem}
+    footer{padding:6rem 5vw 3rem;border-top:1px solid rgba(185,117,73,.2);background:#0a0e11}.footer-inner{width:min(1180px,100%);margin:auto}.footer-mark{display:grid;grid-template-columns:1fr 1fr;gap:3rem;align-items:end}.footer-mark h2{font-size:clamp(3rem,7vw,8rem);line-height:.82;letter-spacing:.02em;margin:0}.footer-mark h2 span{display:block;color:var(--muted);font-size:.23em;letter-spacing:.12em;margin-top:1.2rem}.footer-cta{justify-self:end;max-width:30rem}.footer-cta p{color:var(--muted);font-size:1.05rem}.footer-bottom{display:flex;justify-content:space-between;gap:2rem;margin-top:6rem;padding-top:1.5rem;border-top:1px solid #2b2723;color:#77716c;font-size:.72rem}.footer-bottom a{color:var(--muted)}
+    @keyframes spin{to{transform:rotate(360deg)}}@keyframes dash{to{stroke-dashoffset:-240}}@keyframes pulse{0%,100%{opacity:.45}50%{opacity:1}}@keyframes inscribe{0%{stroke-dashoffset:680;opacity:.3}38%,85%{stroke-dashoffset:0;opacity:1}100%{stroke-dashoffset:0;opacity:.3}}@keyframes cue{0%,100%{transform:scaleY(.45);transform-origin:top;opacity:.4}50%{transform:scaleY(1);opacity:1}}@keyframes pop{0%,100%{transform:scale(.96);opacity:.68}50%{transform:scale(1.05);opacity:1}}@keyframes barUp{from{transform:scaleY(0)}to{transform:scaleY(1)}}@keyframes packetRun{0%{offset-distance:0%;opacity:0}8%,92%{opacity:1}100%{offset-distance:100%;opacity:0}}@keyframes hashIn{0%,100%{opacity:.12;transform:translateY(6px)}50%{opacity:1;transform:translateY(-6px)}}@keyframes lineIn{to{opacity:1;transform:translateX(0)}}@keyframes shieldScan{0%,100%{opacity:0;transform:translateY(-100px)}15%,85%{opacity:.75}50%{transform:translateY(120px)}}@keyframes drawPath{to{stroke-dashoffset:0}}@keyframes stageScan{to{transform:translateY(760px)}}
+    @media(max-width:960px){.topnav>a:not(.repo){display:none}.hero-inner{grid-template-columns:1fr;text-align:center}.sigil-wrap{min-height:330px}.sigil{width:min(360px,85vw)}.eyebrow,.hero-actions{justify-content:center}.hero h1 span,.lede{margin-inline:auto}.hero{padding-top:6rem}.scroll-cue{display:none}.premise-inner,.quick-inner,.learning-title,.difference-title{grid-template-columns:1fr}.story{grid-template-columns:1fr}.stage-wrap{z-index:8;height:47svh;top:64px;padding:.6rem 1rem;background:linear-gradient(var(--void) 85%,transparent)}.stage{height:100%;width:auto;max-width:100%;aspect-ratio:1.3}.steps{padding:3rem clamp(1.5rem,6vw,3.5rem) 8rem}.step{min-height:84svh;max-width:44rem;margin-inline:auto;padding-top:7rem}.step:before{left:-1rem}.step h2{font-size:clamp(2.5rem,8vw,4.5rem);max-width:13ch}.learning-system{grid-template-columns:1fr}.learning-visual{position:relative;top:auto;min-height:520px}.learning-proof{grid-template-columns:1fr}.advantage-grid{grid-template-columns:1fr 1fr}.stats{grid-template-columns:1fr 1fr}.crate-grid{grid-template-columns:1fr 1fr}.footer-mark{grid-template-columns:1fr}.footer-cta{justify-self:start}}
+    @media(max-width:560px){.chapter-pill{display:none}.topbar{padding-inline:1rem}.hero{padding-inline:1.2rem}.hero h1 span{font-size:.27em;line-height:1.2}.sigil-wrap{min-height:285px}.premise{padding:6rem 1.25rem}.premise blockquote{font-size:2.2rem;line-height:1.12}.stage-wrap{height:40svh}.stage-label{top:.8rem;left:1rem}.steps{padding-inline:1.7rem}.step{min-height:88svh;padding-top:6.5rem}.step:before{left:-.75rem;height:52px}.step .index{margin-bottom:.8rem}.step h2{font-size:clamp(2.15rem,11vw,3rem);line-height:1.02;max-width:none;margin-bottom:1.25rem}.step .summary{font-size:1.05rem}.step .detail,.step li{font-size:.94rem}.learning-deep,.difference{padding:7rem 1.25rem}.learning-title h2,.difference-title h2{font-size:3.25rem}.boundary-card{grid-template-columns:auto 1fr;padding:1.2rem}.boundary-card b{grid-column:2}.learning-visual{min-height:400px}.learning-steps{padding-inline:1.2rem}.learn-step{grid-template-columns:2.7rem 1fr;gap:.8rem}.proof-number strong{font-size:5.2rem}.advantage-grid{grid-template-columns:1fr}.limits{grid-template-columns:1fr}.stats,.crate-grid{grid-template-columns:1fr}.stat{min-height:150px}.caveat{grid-template-columns:1fr}.quickstart,.architecture,.interlude{padding-inline:1.25rem}.footer-bottom{flex-direction:column}.footer-mark h2{font-size:4rem}}
+    @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*:before,*:after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important}.button:hover{transform:none}.scene svg{transform:none!important}}
+  </style>
+</head>
+<body>
+  <a class="skip" href="#main">Skip to explainer</a>
+  <div class="progress" aria-hidden="true"></div>
+  <header class="topbar">
+    <a class="brand" href="#top" aria-label="Rune explainer home">
+      <svg viewBox="0 0 40 40" aria-hidden="true"><path d="M20 2 35.6 11v18L20 38 4.4 29V11Z" fill="#12171a" stroke="#b97549"/><path d="M13.5 29V11l11 6-11 4m0-1 12 9" fill="none" stroke="#ffbd70" stroke-width="2.5"/></svg>
+      <span>RUNE<small>LEARNING TOOLCHAIN</small></span>
+    </a>
+    <div class="chapter-pill" aria-live="polite"><i></i><span id="chapterName">Prologue</span></div>
+    <nav class="topnav" aria-label="Primary">
+      <a href="#story">How it works</a><a href="#learning">How it learns</a><a href="#evidence">Evidence</a><a href="#start">Start</a>
+      <a class="repo" href="https://github.com/ruvnet/rune" target="_blank" rel="noreferrer">View source ↗</a>
+    </nav>
+  </header>
+
+  <main id="main">
+    <section class="hero" id="top">
+      <div class="hero-inner">
+        <div class="sigil-wrap" aria-hidden="true">
+          <div class="sigil-glow"></div>
+          <svg class="sigil" viewBox="0 0 440 440">
+            <defs><linearGradient id="copper" x2="1" y2="1"><stop stop-color="#b97549"/><stop offset="1" stop-color="#ffdfaa"/></linearGradient></defs>
+            <g class="orbit" fill="none" stroke="#735035"><circle cx="220" cy="220" r="164" stroke-dasharray="2 15"/><path d="M220 27 387 123v194l-167 96L53 317V123Z" opacity=".68"/></g>
+            <circle cx="220" cy="220" r="123" fill="#12171a" stroke="#87613f"/>
+            <path class="draw" d="M174 294V146l91 51-91 49m0-1 100 49" fill="none" stroke="url(#copper)" stroke-width="10" stroke-linejoin="bevel"/>
+            <path class="flow" d="M51 125 220 28l168 97" fill="none" stroke="#ffbd70" stroke-width="2" stroke-dasharray="7 17"/>
+            <g fill="#ffbd70"><circle class="pulse" cx="220" cy="27" r="5"/><circle class="pulse" cx="387" cy="317" r="5"/><circle class="pulse" cx="53" cy="317" r="5"/></g>
+          </svg>
+        </div>
+        <div class="hero-copy">
+          <div class="eyebrow">RUVNET / RUST TOOLCHAIN</div>
+          <h1>RUNE<span>The learning toolchain for Rust</span></h1>
+          <p class="lede">Source becomes software. <strong>Evidence earns promotion.</strong></p>
+          <div class="hero-actions"><a class="button primary" href="#story">Enter the system ↓</a><a class="button" href="https://github.com/ruvnet/rune#quick-start" target="_blank" rel="noreferrer">Quick start ↗</a></div>
+        </div>
+      </div>
+      <div class="scroll-cue" aria-hidden="true">Scroll to trace</div>
+    </section>
+
+    <section class="premise" aria-labelledby="premise-title">
+      <div class="premise-inner">
+        <h2 id="premise-title">The premise</h2>
+        <blockquote>AI may propose a faster path. <em>It does not get to move the finish line.</em></blockquote>
+      </div>
+    </section>
+
+    <section class="story" id="story" aria-label="How Rune works">
+      <div class="stage-wrap" aria-hidden="true">
+        <div class="stage" id="stage">
+          <div class="stage-label">SYSTEM TRACE / <span id="stageCount">01</span>—08</div>
+          <div class="scene active" data-scene="0">
+            <svg viewBox="0 0 700 620">
+              <text x="56" y="92" class="mono muted tiny">THE CONTRACT PATH</text>
+              <g class="mono" font-size="10"><rect x="488" y="65" width="70" height="24" rx="12" fill="#10151a" stroke="#76563c"/><text x="523" y="81" text-anchor="middle" fill="#c1b8ae">LOCKED</text><rect x="566" y="65" width="78" height="24" rx="12" fill="#10151a" stroke="#76563c"/><text x="605" y="81" text-anchor="middle" fill="#8bbf9f">REPLAY</text></g>
+              <path d="M116 310H584" class="edge"/><path d="M116 310H584" class="wire"/>
+              <circle r="6" class="packet line"/><circle r="3.5" class="packet line" style="animation-delay:-1.6s"/>
+              <g transform="translate(116 310)"><path d="M0-48 42-24v48L0 48-42 24v-48Z" class="node live"/><path d="M-13 15v-30L13 0l-26 9" fill="none" stroke="#ffbd70" stroke-width="3"/><text y="88" text-anchor="middle" font-size="15" letter-spacing="2">SOURCE</text></g>
+              <g transform="translate(272 310)"><path d="M0-48 42-24v48L0 48-42 24v-48Z" class="node"/><path d="M-14-15h28L0 0l14 15h-28" fill="none" stroke="#ffbd70" stroke-width="3"/><text y="88" text-anchor="middle" font-size="15" letter-spacing="2">PLAN</text></g>
+              <g transform="translate(428 310)"><path d="M0-48 42-24v48L0 48-42 24v-48Z" class="node"/><path d="M-15 15 0-16l15 31M-8 4H8" fill="none" stroke="#ffbd70" stroke-width="3"/><text y="88" text-anchor="middle" font-size="15" letter-spacing="2">BUILD</text></g>
+              <g transform="translate(584 310)"><path d="M0-48 42-24v48L0 48-42 24v-48Z" class="node"/><path d="m-17 0 12 13 22-25" fill="none" stroke="#ffbd70" stroke-width="3"/><text y="88" text-anchor="middle" font-size="15" letter-spacing="2">VERIFY</text></g>
+              <g class="mono" font-size="10" fill="#c1b8ae"><text x="194" y="292" text-anchor="middle">HASH</text><text x="350" y="292" text-anchor="middle">REPLAY</text><text x="506" y="292" text-anchor="middle">COMPARE</text></g>
+              <text x="350" y="505" text-anchor="middle" class="muted" font-size="16">One path to replay. A separate path to explore.</text>
+            </svg>
+          </div>
+          <div class="scene" data-scene="1">
+            <svg viewBox="0 0 700 620">
+              <text x="56" y="92" class="mono muted tiny">FROZEN INPUTS / CONTENT ADDRESSED</text>
+              <g transform="translate(350 306)"><circle r="174" class="halo"/><circle r="151" class="halo reverse"/><path d="M0-135 117-68v136L0 135-117 68V-68Z" class="node live"/><path d="M0-88 76-44v88L0 88-76 44v-88Z" fill="#10151a" stroke="#5d4936"/><path d="M-24-8v-17a24 24 0 0 1 48 0v17M-34-8h68v58h-68Z" fill="none" stroke="#ffbd70" stroke-width="3"/><circle cy="19" r="5" fill="#ffdfaa"/><path d="M0 24v12" stroke="#ffdfaa" stroke-width="3"/><text y="156" text-anchor="middle" class="mono" font-size="13" fill="#ffdfaa">PLAN ID = SHA-256(CANONICAL JSON)</text></g>
+              <g class="mono muted" font-size="13"><text x="72" y="222">SOURCE TREE</text><text x="72" y="405">CARGO.LOCK</text><text x="520" y="222">RUSTC -vV</text><text x="505" y="405">POLICY</text></g>
+              <path d="M164 217 247 256M170 398l76-37M535 217l-82 39M530 398l-78-37" class="edge"/>
+              <g><circle class="hashbit" cx="194" cy="230" r="4"/><circle class="hashbit" cx="213" cy="239" r="3"/><circle class="hashbit" cx="198" cy="384" r="4"/><circle class="hashbit" cx="508" cy="231" r="4"/><circle class="hashbit" cx="491" cy="240" r="3"/><circle class="hashbit" cx="507" cy="385" r="4"/></g>
+            </svg>
+          </div>
+          <div class="scene" data-scene="2">
+            <svg viewBox="0 0 700 620">
+              <text x="56" y="92" class="mono muted tiny">APPROVED BUILD / ZERO MODEL CALLS</text>
+              <rect x="84" y="154" width="532" height="314" rx="16" fill="#0c1114" stroke="#5d4936"/>
+              <g class="mono" font-size="17"><text class="terminal-line" x="120" y="205" fill="#ffbd70">$ rune build</text><text class="terminal-line" x="120" y="253" fill="#c1b8ae">replay approved plan</text><text class="terminal-line" x="120" y="298" fill="#c1b8ae">cargo build --release</text><text class="terminal-line" x="120" y="332" fill="#c1b8ae">             --locked</text><text class="terminal-line" x="120" y="366" fill="#c1b8ae">             --offline</text><text class="terminal-line" x="120" y="416" fill="#8bbf9f">✓ artifact digest recorded</text></g>
+              <g transform="translate(553 210)"><circle r="46" class="halo"/><circle r="36" fill="#10151a" stroke="#8b6341"/><text text-anchor="middle" y="-5" font-size="25" fill="#ffdfaa">0</text><text text-anchor="middle" y="15" class="mono muted" font-size="8">MODEL CALLS</text></g>
+              <g transform="translate(553 322)"><circle r="26" fill="#11171a" stroke="#76563c"/><path d="M-12 0-3 10 14-11" fill="none" stroke="#8bbf9f" stroke-width="3"/><text text-anchor="middle" y="46" class="mono muted" font-size="9">OFFLINE</text></g>
+              <path d="M108 502H590" class="wire"/><text x="350" y="547" text-anchor="middle" class="muted" font-size="15">Changed input? Rune stops. Freeze a new plan explicitly.</text>
+            </svg>
+          </div>
+          <div class="scene" data-scene="3">
+            <svg viewBox="0 0 700 620">
+              <text x="56" y="92" class="mono muted tiny">BOUNDED DISCOVERY / LEARNING LOOP</text>
+              <path d="M175 202H525V420H175Z" class="edge"/><path d="M175 202H525V420H175Z" class="wire"/>
+              <circle r="6" class="packet loop"/><circle r="4" class="packet loop two"/>
+              <g transform="translate(175 202)"><rect x="-72" y="-34" width="144" height="68" rx="10" class="node live"/><text text-anchor="middle" y="-4" font-size="14" letter-spacing="2">RECALL</text><text text-anchor="middle" y="17" class="muted" font-size="11">rank recipes</text></g>
+              <g transform="translate(350 202)"><rect x="-72" y="-34" width="144" height="68" rx="10" class="node"/><text text-anchor="middle" y="-4" font-size="14" letter-spacing="2">PROPOSE</text><text text-anchor="middle" y="17" class="muted" font-size="11">budget first</text></g>
+              <g transform="translate(525 202)"><rect x="-72" y="-34" width="144" height="68" rx="10" class="node"/><text text-anchor="middle" y="-4" font-size="14" letter-spacing="2">APPLY</text><text text-anchor="middle" y="17" class="muted" font-size="11">hash checked</text></g>
+              <g transform="translate(525 420)"><rect x="-72" y="-34" width="144" height="68" rx="10" class="node"/><text text-anchor="middle" y="-4" font-size="14" letter-spacing="2">EVALUATE</text><text text-anchor="middle" y="17" class="muted" font-size="11">hidden holdout</text></g>
+              <g transform="translate(350 420)"><rect x="-72" y="-34" width="144" height="68" rx="10" class="node"/><text text-anchor="middle" y="-4" font-size="14" letter-spacing="2">RETAIN</text><text text-anchor="middle" y="17" class="muted" font-size="11">validated only</text></g>
+              <g transform="translate(175 420)"><rect x="-72" y="-34" width="144" height="68" rx="10" class="node"/><text text-anchor="middle" y="-4" font-size="14" letter-spacing="2">RECORD</text><text text-anchor="middle" y="17" class="muted" font-size="11">evidence memory</text></g>
+              <g transform="translate(350 311)"><path d="M0-48 42-24v48L0 48-42 24v-48Z" fill="#10151a" stroke="#76563c"/><path d="M-15-15 15 15M15-15-15 15" stroke="#e86f51" stroke-width="3"/><text y="69" text-anchor="middle" fill="#ffbd70" font-size="11" letter-spacing="1">REJECT → PRESERVE BASELINE</text></g>
+            </svg>
+          </div>
+          <div class="scene" data-scene="4">
+            <svg viewBox="0 0 700 620">
+              <text x="56" y="92" class="mono muted tiny">INDEPENDENT EVALUATION / EXPLICIT GATES</text>
+              <path d="M350 142 532 220v124c0 99-78 157-182 199-104-42-182-100-182-199V220Z" fill="#11171a" stroke="#8b6341" stroke-width="2"/>
+              <path d="M225 278H475" class="scan-line" stroke="#ffdfaa" stroke-width="2" filter="drop-shadow(0 0 7px #ffbd70)"/>
+              <g class="mono" font-size="15"><g class="gate"><circle cx="236" cy="245" r="8" fill="#16231e" stroke="#8bbf9f"/><text x="259" y="250" fill="#8bbf9f">visible tests</text></g><g class="gate"><circle cx="236" cy="285" r="8" fill="#16231e" stroke="#8bbf9f"/><text x="259" y="290" fill="#8bbf9f">hidden holdout</text></g><g class="gate"><circle cx="236" cy="325" r="8" fill="#16231e" stroke="#8bbf9f"/><text x="259" y="330" fill="#8bbf9f">paired benchmark</text></g><g class="gate"><circle cx="236" cy="365" r="8" fill="#16231e" stroke="#8bbf9f"/><text x="259" y="370" fill="#8bbf9f">CI lower bound</text></g></g>
+              <g class="mono" font-size="12"><text x="90" y="180" fill="#e86f51">NEW UNSAFE ×</text><text x="493" y="180" fill="#e86f51">NEW DEPS ×</text><text x="76" y="440" fill="#e86f51">NETWORK ×</text><text x="520" y="440" fill="#e86f51">BUILD.RS ×</text></g>
+              <path d="M169 188 238 234M530 188l-68 47M156 428l84-61M544 428l-84-61" stroke="#e86f51" opacity=".48"/>
+              <text x="350" y="492" text-anchor="middle" class="muted" font-size="14">Each gate can reject on its own.</text>
+            </svg>
+          </div>
+          <div class="scene" data-scene="5">
+            <svg viewBox="0 0 700 620">
+              <text x="56" y="92" class="mono muted tiny">PROMOTION / EXACT TESTED ARTIFACT</text>
+              <g transform="translate(350 292)"><circle r="178" class="halo reverse"/><circle r="162" class="halo"/><circle r="143" fill="none" stroke="#5d4936"/><path d="M0-126 109-63v126L0 126-109 63V-63Z" class="node live"/><path d="m-48 0 34 37 66-75" fill="none" stroke="#ffdfaa" stroke-width="8" class="pop"/><text y="170" text-anchor="middle" font-size="17" letter-spacing="3">EVIDENCE SEAL</text></g>
+              <g class="mono muted" font-size="11"><text x="72" y="180">SOURCE</text><text x="83" y="405">TOOLCHAIN</text><text x="545" y="180">TARGET</text><text x="530" y="405">POLICY</text><text x="323" y="548">DIGEST</text></g>
+              <path d="M128 188 241 234M155 398l95-52M566 188l-108 46M552 398l-102-52M350 514v-72" class="edge"/>
+              <g fill="#ffbd70"><circle class="orbit-node" cx="128" cy="188" r="5"/><circle class="orbit-node" cx="155" cy="398" r="5"/><circle class="orbit-node" cx="566" cy="188" r="5"/><circle class="orbit-node" cx="552" cy="398" r="5"/><circle class="orbit-node" cx="350" cy="514" r="5"/></g>
+            </svg>
+          </div>
+          <div class="scene" data-scene="6">
+            <svg viewBox="0 0 700 620">
+              <text x="56" y="92" class="mono muted tiny">MEASURED FIXTURE / NOT A UNIVERSAL CLAIM</text>
+              <line x1="108" y1="480" x2="612" y2="480" class="edge"/><line x1="108" y1="148" x2="108" y2="480" class="edge"/>
+              <rect class="bar" x="178" y="386" width="120" height="94" fill="#4c3b30"/><rect class="bar" x="400" y="150" width="120" height="330" fill="url(#barGrad)" style="animation-delay:.2s"/>
+              <defs><linearGradient id="barGrad" y2="1"><stop stop-color="#ffdfaa"/><stop offset="1" stop-color="#b97549"/></linearGradient></defs>
+              <text x="238" y="370" text-anchor="middle" font-size="22">1.00×</text><text x="460" y="134" text-anchor="middle" font-size="35" fill="#ffdfaa">3.51×</text>
+              <path d="M430 130H490M460 130V118" stroke="#ffdfaa" stroke-width="2"/><text x="510" y="121" class="mono muted" font-size="10">95% CI</text>
+              <g fill="#ffbd70" opacity=".75"><circle cx="416" cy="166" r="3"/><circle cx="430" cy="164" r="3"/><circle cx="444" cy="168" r="3"/><circle cx="458" cy="165" r="3"/><circle cx="472" cy="167" r="3"/><circle cx="486" cy="164" r="3"/><circle cx="500" cy="166" r="3"/></g>
+              <text x="238" y="515" text-anchor="middle" class="mono muted" font-size="13">BASELINE</text><text x="460" y="515" text-anchor="middle" class="mono muted" font-size="13">VALIDATED CANDIDATE</text>
+              <text x="350" y="565" text-anchor="middle" class="muted" font-size="13">40 interleaved pairs · one x86_64 Linux machine · small kernel</text>
+            </svg>
+          </div>
+          <div class="scene" data-scene="7">
+            <svg viewBox="0 0 700 620">
+              <text x="56" y="92" class="mono muted tiny">THE OPERATING PRINCIPLE</text>
+              <g opacity=".65"><path d="M350 114 503 378 197 378Z" class="edge"/><path d="M197 202 503 202 350 466Z" class="edge"/></g>
+              <g transform="translate(350 290)"><circle r="196" class="halo reverse"/><circle r="176" class="halo"/><circle r="120" fill="#11171a" stroke="#87613f"/><path class="drawline" d="M-43 68V-68l88 49-88 47m0-1L54 68" fill="none" stroke="#ffbd70" stroke-width="9"/><g fill="#ffbd70"><circle cx="0" cy="-176" r="5" class="pop"/><circle cx="153" cy="88" r="5" class="pop"/><circle cx="-153" cy="88" r="5" class="pop"/></g></g>
+              <text x="350" y="522" text-anchor="middle" font-size="22">Similarity suggests.</text><text x="350" y="551" text-anchor="middle" fill="#ffdfaa" font-size="22">Measurements decide.</text>
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      <div class="steps">
+        <article class="step active" data-step="0" data-title="The contract path"><span class="index">01 / 08</span><h2>Two paths. One trust boundary.</h2><p class="summary">Rune wraps Cargo with a deterministic build path and a separate, budgeted discovery path.</p><p class="detail">An approved plan replays without a model. Exploration may suggest a candidate, but it cannot edit the acceptance contract or silently enter the build.</p><ul><li>Build from a frozen plan</li><li>Explore only when explicitly asked</li><li>Promote only after independent evaluation</li></ul></article>
+        <article class="step" data-step="1" data-title="Frozen inputs"><span class="index">02 / 08</span><h2>Freeze the world that matters.</h2><p class="summary">A plan is bound to the exact source tree, lockfile, compiler identity, policy, and target.</p><p class="detail">Its ID is the SHA-256 of canonical JSON. Edit a source file and ordinary <code>rune build</code> refuses with a stale-plan reason until you approve a new plan with <code>--freeze</code>.</p><div class="truth-note"><strong>Why it matters:</strong> reproducibility starts by making drift visible.</div></article>
+        <article class="step" data-step="2" data-title="Deterministic replay"><span class="index">03 / 08</span><h2>Build without asking an agent.</h2><p class="summary">The normal path replays the approved plan using Cargo’s locked, offline mode.</p><p class="detail"><code>rune build</code> runs the equivalent of <code>cargo build --release --locked --offline</code>, records an artifact digest, and writes a receipt stating that model calls equal zero.</p><ul><li>Credentials are not read</li><li>The cost ledger is not touched</li><li><span><code>rune verify</code> <span class="keep-line">rebuilds in a clean target directory</span></span></li></ul></article>
+        <article class="step" data-step="3" data-title="Bounded discovery"><span class="index">04 / 08</span><h2>Learning is a gated loop.</h2><p class="summary">Recall. Propose. Apply. Evaluate. Retain. Record.</p><p class="detail">Recipes are ranked by workload, hardware, compiler, ABI, target, and policy fingerprints. Ranking is only a suggestion. A paid proposal reserves its dollar and token budget first; output remains data until tested.</p><ul><li>Candidate edits are hash-checked</li><li>Failure preserves the baseline</li><li>Rejected recipes remain searchable with their failure scope</li></ul></article>
+        <article class="step" data-step="4" data-title="Independent evaluation"><span class="index">05 / 08</span><h2>The optimizer cannot grade itself.</h2><p class="summary">The contract, thresholds, and hidden holdout live outside the candidate tree.</p><p class="detail">Static gates reject new <code>unsafe</code>, dependencies, build scripts, proc-macros, network access, process creation, environment reads, and filesystem writes before candidate code is built.</p><ul><li>At least 30 paired, interleaved samples after warmup</li><li>The 95% CI lower bound must clear the minimum improvement</li><li>Guard benchmarks must stay within tolerance</li></ul></article>
+        <article class="step" data-step="5" data-title="Evidence-bound promotion"><span class="index">06 / 08</span><h2>Approve the thing you tested.</h2><p class="summary">Promotion binds approval to the exact artifact, target, compiler, policy, contract, and evaluator version.</p><p class="detail">An Ed25519 evaluator receipt authenticates the report bytes. A trusted key must be supplied independently of the candidate workspace.</p><div class="truth-note"><strong>Important:</strong> a signature proves provenance and integrity—not correctness, and not a hardened sandbox.</div></article>
+        <article class="step" data-step="6" data-title="Measured evidence"><span class="index">07 / 08</span><h2>Measured, scoped, and falsifiable.</h2><p class="summary">A squared-distance fixture reached a 3.51× geometric-mean speedup with a 95% CI of [3.511, 3.513].</p><p class="detail">The experiment used 40 interleaved pairs after five warmups, pinned to one core. A candidate that dropped the final partial chunk passed visible tests, then failed the hidden length-7 holdout.</p><div class="truth-note"><strong>Scope:</strong> one small kernel, one session, one x86_64 Linux machine. It is not a benchmark of your code.</div></article>
+        <article class="step" data-step="7" data-title="The principle"><span class="index">08 / 08</span><h2>Suggestions are cheap. Evidence is durable.</h2><p class="summary">Rune turns optimization from an act of faith into a chain of inspectable decisions.</p><p class="detail">Explain shows the recipe, measurements, and cost behind a decision. Rollback restores the previous approved plan. Cleanup is dry-run by default and quarantines only owned generated objects.</p><ul><li>Similarity suggests</li><li>Measurements decide</li><li>Evidence travels with the artifact</li></ul></article>
+      </div>
+    </section>
+
+    <section class="learning-deep" id="learning" aria-labelledby="learning-title">
+      <div class="learning-inner">
+        <div class="eyebrow">Self-learning optimizer / exact mechanics</div>
+        <div class="learning-title">
+          <h2 id="learning-title">It learns around the compiler.</h2>
+          <p>Rune is not a new Rust compiler and does not replace <strong>rustc</strong>. It is a learning orchestration layer around Cargo and rustc: it remembers which source-level optimization recipes worked, where they worked, what they cost, and why other candidates failed.</p>
+        </div>
+
+        <div class="boundary-card">
+          <div class="boundary-mark" aria-hidden="true"><span>R</span></div>
+          <div><h3>Compiler compatibility is the boundary.</h3><p>Rustc still parses, optimizes, and emits machine code. Rune owns the surrounding loop: context, candidate search, controlled edits, independent evaluation, evidence memory, promotion, rollback, and artifact lineage.</p></div>
+          <b>Orchestrator ≠ compiler fork</b>
+        </div>
+
+        <div class="learning-system">
+          <div class="learning-visual" aria-hidden="true">
+            <svg viewBox="0 0 620 650">
+              <defs><linearGradient id="memoryCopper" x2="1" y2="1"><stop stop-color="#b97549"/><stop offset="1" stop-color="#ffdfaa"/></linearGradient></defs>
+              <text x="42" y="54" fill="#c1b8ae" font-family="ui-monospace,monospace" font-size="11" letter-spacing="2">CONTEXTUAL EVIDENCE MEMORY</text>
+              <g transform="translate(310 307)">
+                <circle r="178" fill="none" stroke="#604a3a" stroke-dasharray="3 11" class="memory-ring"/>
+                <circle r="146" fill="none" stroke="#76563c" stroke-dasharray="5 15" class="memory-ring reverse"/>
+                <path d="M0-112 97-56v112L0 112-97 56V-56Z" fill="#11171a" stroke="url(#memoryCopper)" stroke-width="2"/>
+                <path d="M-45-14c0-27 20-45 45-45s45 18 45 45c0 20-11 31-22 42-8 8-12 17-12 28h-22c0-11-4-20-12-28-11-11-22-22-22-42Z" fill="none" stroke="#ffbd70" stroke-width="3"/>
+                <path d="M-14 73h28M-10 84h20" stroke="#ffdfaa" stroke-width="3"/>
+                <text y="137" text-anchor="middle" fill="#eee9e1" font-size="15" letter-spacing="2">EVIDENCE MEMORY</text>
+              </g>
+              <path d="M310 129V82M464 218l64-37M464 396l64 37M310 485v63M156 396l-64 37M156 218l-64-37" fill="none" stroke="#ffbd70" stroke-width="2" class="memory-flow"/>
+              <g fill="#10151a" stroke="#76563c">
+                <rect x="237" y="58" width="146" height="54" rx="10"/><rect x="472" y="139" width="116" height="54" rx="10"/><rect x="472" y="423" width="116" height="54" rx="10"/><rect x="237" y="538" width="146" height="54" rx="10"/><rect x="32" y="423" width="116" height="54" rx="10"/><rect x="32" y="139" width="116" height="54" rx="10"/>
+              </g>
+              <g fill="#eee9e1" font-size="12" text-anchor="middle" letter-spacing="1.4"><text x="310" y="90">FINGERPRINT</text><text x="530" y="171">RECALL</text><text x="530" y="455">PROPOSE</text><text x="310" y="570">EVALUATE</text><text x="90" y="455">RETAIN</text><text x="90" y="171">REJECT</text></g>
+              <g fill="#ffbd70"><circle cx="310" cy="129" r="5" class="memory-pulse"/><circle cx="464" cy="218" r="5" class="memory-pulse"/><circle cx="156" cy="396" r="5" class="memory-pulse"/></g>
+              <text x="310" y="625" text-anchor="middle" fill="#afa69c" font-size="13">Memory ranks candidates. It never approves them.</text>
+            </svg>
+          </div>
+
+          <div class="learning-steps">
+            <article class="learn-step"><span class="num">01</span><div><h3>Fingerprint the current problem</h3><p>Rune describes the optimization context using source semantics, workload distribution, target architecture, CPU features, compiler version, ABI, and policy fingerprint.</p><small>A match on source text alone is not enough; hardware or policy drift changes the context.</small></div></article>
+            <article class="learn-step"><span class="num">02</span><div><h3>Recall evidence, not instructions</h3><p>Memory stores recipe descriptors linked to baseline and candidate hashes, raw measurements, confidence intervals, failures, evaluator version, resource cost, and retention class.</p><small>A recipe says “this worked under these conditions,” not “apply this everywhere.”</small></div></article>
+            <article class="learn-step"><span class="num">03</span><div><h3>Rank or propose a candidate</h3><p>Contextually similar recipes are ranked first. If local memory cannot supply a useful candidate, <code>rune improve</code> may request one bounded model proposal after reserving its dollar and token budget.</p><small>The model returns candidate data. It does not alter the approved build.</small></div></article>
+            <article class="learn-step"><span class="num">04</span><div><h3>Apply inside a candidate workspace</h3><p>An exact replacement or pinned Agent Booster sidecar applies the edit only after source-hash, path, symlink, and size checks. A placement confidence score is never treated as correctness.</p><small>The baseline remains untouched and available for comparison or rollback.</small></div></article>
+            <article class="learn-step"><span class="num">05</span><div><h3>Evaluate against today’s contract</h3><p>A separate evaluator compiles, runs visible tests, challenges a hidden holdout, applies capability gates, and performs paired interleaved benchmarks. The optimizer cannot edit these rules.</p><small>Even a previously successful recipe must pass again when compiler, target, policy, or contract changes.</small></div></article>
+            <article class="learn-step"><span class="num">06</span><div><h3>Learn from success and failure</h3><p>Validated evidence enters memory. Rejected candidates remain searchable with their failure scope, preventing the system from repeatedly paying for known-bad ideas while avoiding overgeneralization.</p><small>Approval is bound to the exact tested artifact; memory only improves the next search order.</small></div></article>
+          </div>
+        </div>
+
+        <div class="learning-proof">
+          <div class="proof-number"><strong>53.5%</strong><span>validated selection on fresh cases</span></div>
+          <div class="proof-copy"><h3>Evidence that memory can improve selection—within a narrow domain.</h3><p>Frozen memory selected a validated improvement in 154 of 288 fresh cases across twelve synthetic sorting contexts, versus 35.5% expected for uniform random selection and 36.8% for the training-selected fixed algorithm. All 24 seed blocks favored memory and the preregistered confirmation gates passed.</p><p class="scope"><strong>Scope:</strong> one shared host, synthetic sorting contexts, and harness-supplied feature metadata. This does not prove general compiler improvement, autonomous algorithm invention, or production-wide transfer.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="difference" id="difference" aria-labelledby="difference-title">
+      <div class="difference-inner">
+        <div class="eyebrow">Why Rune is different</div>
+        <div class="difference-title"><h2 id="difference-title">Optimization with a memory—and a constitution.</h2><p>Most optimization systems own one part of the loop. Rune connects search, measurement, safety policy, economics, memory, artifact identity, and rollback while keeping proposal power separate from approval power.</p></div>
+
+        <div class="compare-wrap" role="region" aria-label="Optimization approach comparison" tabindex="0">
+          <table class="compare">
+            <thead><tr><th>Approach</th><th>What it optimizes</th><th>What it remembers</th><th>Who decides</th><th>Rune’s distinction</th></tr></thead>
+            <tbody>
+              <tr><td>rustc / LLVM</td><td>Compiler IR and machine code through built-in passes and heuristics.</td><td>Normally no cross-project evidence memory between ordinary builds.</td><td>The compiler’s tested implementation and flags.</td><td>Rune reuses rustc, then governs source-level alternatives and evidence across runs.</td></tr>
+              <tr><td>AI coding agent</td><td>Open-ended source edits guided by prompts and repository context.</td><td>Conversation or agent memory, often without artifact-bound performance evidence.</td><td>Frequently the same agent proposes and informally judges the edit.</td><td>Rune treats model output as untrusted candidate data and grades it independently.</td></tr>
+              <tr><td>PGO</td><td>Compiler decisions guided by profiles from representative executions.</td><td>Profile data tied to instrumented workloads and compiler tooling.</td><td>The compiler applies profile-guided transformations.</td><td>Rune can search algorithmic or source-level alternatives; it complements rather than replaces PGO.</td></tr>
+              <tr><td>Autotuner</td><td>A predefined parameter or implementation search space.</td><td>Measurements for configurations in that search domain.</td><td>A scoring objective selects the winner.</td><td>Rune adds semantic contracts, capability gates, cost accounting, negative memory, and signed promotion evidence.</td></tr>
+              <tr class="rune-row"><td>Rune</td><td>Contextual source-level recipes executed by the existing Rust toolchain.</td><td>Scoped successes and failures with hashes, costs, statistics, policy, and evaluator identity.</td><td>An independent evaluator under a frozen contract.</td><td>A deterministic build path remains agent-free; learning changes search priority, never the acceptance rules.</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3 class="advantage-title">Where this architecture is better</h3>
+        <div class="advantage-grid">
+          <article class="advantage"><b>01 / REPRODUCIBILITY</b><h3>Learning cannot contaminate normal builds.</h3><p>Approved builds replay pinned inputs offline with zero model calls. Exploration is explicit, separate, and reversible.</p></article>
+          <article class="advantage"><b>02 / NEGATIVE MEMORY</b><h3>Failure becomes useful evidence.</h3><p>Rejected candidates keep their failure scope, so later searches can avoid repeating expensive mistakes without banning an idea everywhere.</p></article>
+          <article class="advantage"><b>03 / CONTEXT</b><h3>“Faster” is tied to where.</h3><p>Target, CPU features, compiler, ABI, workload, and policy travel with the result. An x86 win does not silently become an ARM approval.</p></article>
+          <article class="advantage"><b>04 / TRUST</b><h3>The optimizer cannot move the goalposts.</h3><p>Hidden tests, thresholds, capability policy, signing keys, and promotion permissions stay outside the candidate workspace.</p></article>
+          <article class="advantage"><b>05 / ECONOMICS</b><h3>Search has a visible price.</h3><p>Paid calls reserve budget before execution, reconcile provider-reported cost, and attach resource cost to the evidence record.</p></article>
+          <article class="advantage"><b>06 / OPERATIONS</b><h3>Every decision is explainable and reversible.</h3><p>Plans, artifact digests, measurements, evaluator receipts, cleanup ownership, and rollback targets form one auditable chain.</p></article>
+        </div>
+        <div class="limits"><strong>Where Rune is not “better”</strong><p>Rune is not a replacement for rustc’s optimizer, LLVM, PGO, formal verification, or a hardened sandbox. It adds the most value when optimization must be reproducible, governed, budgeted, hardware-aware, and auditable. Its published learning result is promising but deliberately narrow; broad production generalization remains unproven.</p></div>
+      </div>
+    </section>
+
+    <section class="interlude" id="evidence" aria-labelledby="evidence-title">
+      <div class="interlude-inner"><div class="eyebrow">Repository-measured results</div><h2 id="evidence-title">Claims with edges.</h2>
+        <div class="stats">
+          <div class="stat"><strong>3.51×</strong><span>Fixture kernel geometric-mean speedup</span><small>95% CI [3.511, 3.513]</small></div>
+          <div class="stat"><strong>0.77 ms</strong><span>p95 recipe selection over 10,000 synthetic recipes</span><small>Target: under 10 ms</small></div>
+          <div class="stat"><strong>$0.0119</strong><span>One live <code>rune improve</code> call</span><small>1,325 tokens; ledger reconciled</small></div>
+          <div class="stat"><strong>0</strong><span>Model calls in approved build and verify paths</span><small>Asserted by repository tests</small></div>
+        </div>
+        <div class="caveat"><strong>Read the boundary</strong><p>These results come from the repository’s fixtures and tests. The confidence interval measures within-session variance, not drift across days; recipe selection uses synthetic records; the live-call ledger check is not an independent billing audit. Rune’s broader cross-family generalization remains unproven.</p></div>
+      </div>
+    </section>
+
+    <section class="quickstart" id="start" aria-labelledby="start-title"><div class="quick-inner"><div><div class="eyebrow">Four commands</div><h2 id="start-title">Make drift explicit.</h2><p>Install the <code>rune-toolchain</code> package, freeze a plan from committed inputs, verify its artifact, then inspect the evidence trail.</p><a class="button" href="https://github.com/ruvnet/rune#quick-start" target="_blank" rel="noreferrer">Open full quick start ↗</a></div>
+      <div class="terminal" aria-label="Rune quick start commands"><div class="terminal-head"><i></i><i></i><i></i><span>RUNE / QUICK START</span></div><pre><span class="prompt">$</span> cargo install rune-toolchain
+
+<span class="prompt">$</span> cd your-cargo-workspace
+<span class="prompt">$</span> rune build --freeze
+<span class="ok">✓ plan approved · build offline · digest recorded</span>
+
+<span class="prompt">$</span> rune verify
+<span class="ok">✓ clean rebuild matches recorded artifact</span>
+
+<span class="prompt">$</span> rune explain
+<span class="comment"># plan lineage · budget · measurements · evidence</span></pre></div></div></section>
+
+    <section class="architecture" aria-labelledby="arch-title"><div class="arch-inner"><div class="eyebrow">Workspace architecture</div><h2 id="arch-title">Small crates. Explicit roles.</h2><div class="crate-grid">
+      <article class="crate"><b>CLI</b><code>rune-toolchain</code><p>User-facing orchestration and commands.</p></article>
+      <article class="crate"><b>CONTRACTS</b><code>rune-toolchain-core</code><p>Plans, tree digests, plan store, and cost ledger.</p></article>
+      <article class="crate"><b>BUILD</b><code>rune-toolchain-cargo</code><p>Toolchain identity and locked offline Cargo builds.</p></article>
+      <article class="crate"><b>EDIT</b><code>rune-toolchain-edit</code><p>Hash-checked exact-replace and Agent Booster edits.</p></article>
+      <article class="crate"><b>EVALUATE</b><code>rune-toolchain-eval</code><p>Isolation, hidden holdouts, paired statistics, and receipts.</p></article>
+      <article class="crate"><b>REMEMBER</b><code>rune-toolchain-memory</code><p>Recipe ranking, approval keys, snapshots, and studies.</p></article>
+      <article class="crate"><b>TARGET</b><code>rune-toolchain-target</code><p>Cross-build descriptors, executors, and artifact envelopes.</p></article>
+      <article class="crate"><b>LIFECYCLE</b><code>rune-toolchain-gc</code><p>Ownership manifests, leases, quarantine, and purge.</p></article>
+    </div></div></section>
+  </main>
+
+  <footer><div class="footer-inner"><div class="footer-mark"><h2>RUNE<span>DECLARE INTENT. EXPLORE ALTERNATIVES. KEEP WHAT PASSES.</span></h2><div class="footer-cta"><p>The build stays deterministic. Discovery stays bounded. Promotion stays accountable.</p><div class="hero-actions"><a class="button primary" href="https://github.com/ruvnet/rune" target="_blank" rel="noreferrer">Explore Rune on GitHub ↗</a><a class="button" href="#top">Return to top ↑</a></div></div></div><div class="footer-bottom"><span>Independent visual explainer · content derived from the Rune repository</span><span><a href="https://github.com/ruvnet/rune/blob/main/LICENSE" target="_blank" rel="noreferrer">MIT License</a> · <a href="https://github.com/ruvnet/rune/blob/main/docs/VALIDATION.md" target="_blank" rel="noreferrer">Validation receipts</a></span></div></div></footer>
+
+  <script>
+    (()=>{
+      const root=document.documentElement,story=document.querySelector('#story'),stage=document.querySelector('#stage'),steps=[...document.querySelectorAll('.step')],scenes=[...document.querySelectorAll('.scene')],chapter=document.querySelector('#chapterName'),count=document.querySelector('#stageCount'),afterStory=[[document.querySelector('#learning'),'How it learns'],[document.querySelector('#difference'),'Why Rune is different'],[document.querySelector('#evidence'),'Measured evidence'],[document.querySelector('#start'),'Quick start']];
+      let current=-1,ticking=false;
+      const clamp=(n,min=0,max=1)=>Math.max(min,Math.min(max,n));
+      const activate=(index)=>{if(index===current)return;current=index;steps.forEach((el,i)=>el.classList.toggle('active',i===index));scenes.forEach((el,i)=>el.classList.toggle('active',i===index));chapter.textContent=steps[index]?.dataset.title||'Prologue';count.textContent=String(index+1).padStart(2,'0')};
+      const update=()=>{ticking=false;const h=document.documentElement.scrollHeight-innerHeight;root.style.setProperty('--progress',`${clamp(scrollY/h)*100}%`);const sr=story.getBoundingClientRect(),center=innerHeight*.5;if(sr.top>innerHeight*.72){chapter.textContent='Prologue';stage.style.setProperty('--drift','0px');return}if(sr.bottom<center){let label='The principle';afterStory.forEach(([el,name])=>{if(el&&el.getBoundingClientRect().top<=center)label=name});chapter.textContent=label;stage.style.setProperty('--drift','0px');return}let best=0,distance=Infinity;steps.forEach((el,i)=>{const r=el.getBoundingClientRect(),d=Math.abs(r.top+r.height*.5-center);if(d<distance){distance=d;best=i}});activate(best);const activeRect=steps[best].getBoundingClientRect(),local=clamp((center-activeRect.top)/activeRect.height);stage.style.setProperty('--drift',`${((.5-local)*14).toFixed(2)}px`)};
+      const requestUpdate=()=>{if(!ticking){ticking=true;requestAnimationFrame(update)}};addEventListener('scroll',requestUpdate,{passive:true});addEventListener('resize',requestUpdate,{passive:true});addEventListener('load',requestUpdate,{once:true});update();requestAnimationFrame(()=>requestAnimationFrame(update));
+      document.querySelectorAll('a[href^="#"]').forEach(a=>a.addEventListener('click',e=>{const t=document.querySelector(a.getAttribute('href'));if(t){e.preventDefault();t.scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'})}}));
+    })();
+  </script>
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"TechArticle","headline":"Rune: Source becomes software. Evidence earns promotion.","description":"An animated explainer of Rune, the learning toolchain for Rust.","about":{"@type":"SoftwareSourceCode","name":"Rune","codeRepository":"https://github.com/ruvnet/rune","programmingLanguage":"Rust","license":"https://opensource.org/license/mit"}}</script>
+</body>
+</html>
+
+
