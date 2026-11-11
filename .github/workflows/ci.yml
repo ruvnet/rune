@@ -19,6 +19,8 @@ jobs:
       - uses: Swatinem/rust-cache@v2
       - run: cargo fmt --all --check
       - run: cargo clippy --workspace --all-targets --locked -- -D warnings
+      - name: Verify publishable crate packages
+        run: cargo package --workspace --exclude rune-study --locked
       - name: Allow unprivileged network namespaces (the evaluator fails closed without them)
         run: sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
       - run: cargo test --workspace --locked

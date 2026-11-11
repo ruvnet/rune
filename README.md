@@ -1,4 +1,4 @@
-<p align="center"><a href="https://ruvnet.github.io/rune/"><img src="assets/rune-hero.svg" width="100%" alt="Rune. The learning toolchain for Rust. Open the interactive explainer." /></a></p>
+<p align="center"><a href="https://ruvnet.github.io/rune/"><img src="https://raw.githubusercontent.com/ruvnet/rune/main/assets/rune-hero.svg" width="100%" alt="Rune. The learning toolchain for Rust. Open the interactive explainer." /></a></p>
 
 <p align="center"><strong>Source becomes software. Evidence earns promotion.</strong></p>
 
@@ -14,6 +14,10 @@
 Rune is a learning toolchain for Rust that wraps Cargo. A normal build replays a frozen, content-addressed plan with no model call and Cargo dependency resolution in offline mode. Existing build scripts remain trusted host code. Exploring faster implementations is a separate, budgeted step, and nothing a model proposes is promoted until an independent evaluator accepts it.
 
 > **Naming.** The binary is `rune`; the crates.io package is `rune-toolchain`, because `rune` and `rune-cli` belong to the Rune scripting language. If you also have `rune-cli` installed, the two binaries collide on `$PATH`.
+
+## Upgrading to 0.3.0
+
+`rune promote` now requires a signed evaluation receipt (`--receipt`) and a separately supplied trusted public key (`--trusted-key`); unsigned reports are no longer promoted. See the [migration and release procedure](https://github.com/ruvnet/rune/blob/main/docs/RELEASE-0.3.0.md).
 
 ## Quick start
 
@@ -31,7 +35,7 @@ Edit a source file and `rune build` refuses to run (`stale plan: source_digest`)
 
 ## What it does
 
-<img src="assets/rune-build.svg" width="100%" alt="Build graph: intent, locked plan, pinned build and independent verification." />
+<img src="https://raw.githubusercontent.com/ruvnet/rune/main/assets/rune-build.svg" width="100%" alt="Build graph: intent, locked plan, pinned build and independent verification." />
 
 | Operation | Command | Contract |
 | --- | --- | --- |
@@ -50,7 +54,7 @@ Run `rune --help` for flags. Exit codes: `0` ok, `1` failure or rejection, `2` m
 
 ## The learning loop
 
-<img src="assets/rune-learning.svg" width="100%" alt="Learning loop: recall, propose, apply, evaluate, retain, record." />
+<img src="https://raw.githubusercontent.com/ruvnet/rune/main/assets/rune-learning.svg" width="100%" alt="Learning loop: recall, propose, apply, evaluate, retain, record." />
 
 1. **Recall.** Recipes are retrieved by fingerprint (source semantics, target, CPU features, compiler, ABI, policy). Retrieval ranks; it cannot approve.
 2. **Propose.** OpenRouter, within an explicit dollar and token budget, with `data_collection: deny`, `zdr: true` and `allow_fallbacks: false`.
@@ -90,7 +94,7 @@ Read the numbers with these caveats. The CI width reflects variance within one s
 
 ## Targets and evidence
 
-<img src="assets/rune-artifact.svg" width="100%" alt="Evidence seal binding source, dependencies, plan, toolchain, tests and artifact digest." />
+<img src="https://raw.githubusercontent.com/ruvnet/rune/main/assets/rune-artifact.svg" width="100%" alt="Evidence seal binding source, dependencies, plan, toolchain, tests and artifact digest." />
 
 Cross-compiling is compile evidence only. Performance claims need execution on the target.
 
@@ -122,27 +126,27 @@ Implemented and tested: everything in the tables above. Not done, and not claime
 
 - **MetaHarness and AgenticOW.** Neither is integrated. MetaHarness exposes no performance-evaluation API, and AgenticOW is a copy-on-write vector store for agent memory, not a workspace sandbox. Rune ships its own evaluator and workspace behind an `Evaluator` trait so an adapter can be added.
 - **RuVector ranking.** An optional `ruvector` feature ranks with `ruvector-core` HNSW. It is off by default because that dependency tree needs Rust 1.89.
-- **Learning claim.** Scoped evidence now exists for memory based selection within twelve synthetic sorting contexts: frozen training memory selected a validated improvement in 53.5% of 288 fresh input cases, versus 35.5% for random choice and 36.8% for the training selected fixed algorithm. The prospective confirmation passed its frozen confidence and significance gates. The earlier 34-kernel study remains `Insufficient`, and the 36-case sorting pilot remains `NoDifference`. See [proof and limits](docs/validation/PROOF.md), [confirmation protocol](study-transfer-confirm/PREREGISTRATION.md) and [result](study-transfer-confirm/result.json). Generalization to independent kernel families and production optimization remains unproven.
+- **Learning claim.** Scoped evidence now exists for memory based selection within twelve synthetic sorting contexts: frozen training memory selected a validated improvement in 53.5% of 288 fresh input cases, versus 35.5% for random choice and 36.8% for the training selected fixed algorithm. The prospective confirmation passed its frozen confidence and significance gates. The earlier 34-kernel study remains `Insufficient`, and the 36-case sorting pilot remains `NoDifference`. See [proof and limits](https://github.com/ruvnet/rune/blob/main/docs/validation/PROOF.md), [confirmation protocol](https://github.com/ruvnet/rune/blob/main/study-transfer-confirm/PREREGISTRATION.md) and [result](https://github.com/ruvnet/rune/blob/main/study-transfer-confirm/result.json). Generalization to independent kernel families and production optimization remains unproven.
 - **Real hardware.** No aarch64 hardware was available; aarch64 and WASM results are emulator or foreign-runtime correctness evidence.
-- **Release gate.** Fixture gates pass, and a snapshot of Rune's own workspace with real dependencies now builds through plain Cargo and Rune with an identical selected product; a fresh rebuild reproduces its digest. This checks one selected product, with the observed workspace and toolchain. See [proof](docs/validation/PROOF.md).
+- **Release gate.** Fixture gates pass, and a snapshot of Rune's own workspace with real dependencies now builds through plain Cargo and Rune with an identical selected product; a fresh rebuild reproduces its digest. This checks one selected product, with the observed workspace and toolchain. See [proof](https://github.com/ruvnet/rune/blob/main/docs/validation/PROOF.md).
 - **Compiler integration.** Rune reuses rustc and Cargo. MIR passes and a compiler fork are out of scope.
 
 ## Architecture decisions
 
-* [ADR 001: Rune architecture and Cargo compatibility](docs/adr/001-system-boundary.md)
-* [ADR 002: Bounded OpenRouter reasoning](docs/adr/002-openrouter-reasoning.md)
-* [ADR 003: Agent Booster as the local edit engine](docs/adr/003-agent-booster.md)
-* [ADR 004: RuVector evidence and transfer memory](docs/adr/004-learning-memory.md)
-* [ADR 005: Independent validation and security contracts](docs/adr/005-independent-validation.md)
-* [ADR 006: Hardware contracts and artifacts](docs/adr/006-targets-artifacts.md)
-* [ADR 007: Isolation and safe cleanup](docs/adr/007-isolation-retention.md)
-* [ADR 008: Delivery gates and economic acceptance](docs/adr/008-delivery-economics.md)
-* [ADR 009: Rune identity and visual language](docs/adr/009-rune-identity.md)
-* [ADR 010: rGi as an optional campaign supervisor](docs/adr/010-rgi-supervisor.md)
-* [ADR 011: Authenticated evaluator provenance](docs/adr/011-authenticated-evaluation.md)
-* [ADR 012: Stable workspace product and path selection](docs/adr/012-stable-workspace-product.md)
+* [ADR 001: Rune architecture and Cargo compatibility](https://github.com/ruvnet/rune/blob/main/docs/adr/001-system-boundary.md)
+* [ADR 002: Bounded OpenRouter reasoning](https://github.com/ruvnet/rune/blob/main/docs/adr/002-openrouter-reasoning.md)
+* [ADR 003: Agent Booster as the local edit engine](https://github.com/ruvnet/rune/blob/main/docs/adr/003-agent-booster.md)
+* [ADR 004: RuVector evidence and transfer memory](https://github.com/ruvnet/rune/blob/main/docs/adr/004-learning-memory.md)
+* [ADR 005: Independent validation and security contracts](https://github.com/ruvnet/rune/blob/main/docs/adr/005-independent-validation.md)
+* [ADR 006: Hardware contracts and artifacts](https://github.com/ruvnet/rune/blob/main/docs/adr/006-targets-artifacts.md)
+* [ADR 007: Isolation and safe cleanup](https://github.com/ruvnet/rune/blob/main/docs/adr/007-isolation-retention.md)
+* [ADR 008: Delivery gates and economic acceptance](https://github.com/ruvnet/rune/blob/main/docs/adr/008-delivery-economics.md)
+* [ADR 009: Rune identity and visual language](https://github.com/ruvnet/rune/blob/main/docs/adr/009-rune-identity.md)
+* [ADR 010: rGi as an optional campaign supervisor](https://github.com/ruvnet/rune/blob/main/docs/adr/010-rgi-supervisor.md)
+* [ADR 011: Authenticated evaluator provenance](https://github.com/ruvnet/rune/blob/main/docs/adr/011-authenticated-evaluation.md)
+* [ADR 012: Stable workspace product and path selection](https://github.com/ruvnet/rune/blob/main/docs/adr/012-stable-workspace-product.md)
 
-[Validation receipts and source provenance](docs/VALIDATION.md)
+[Validation receipts and source provenance](https://github.com/ruvnet/rune/blob/main/docs/VALIDATION.md)
 
 ## Development
 
@@ -157,4 +161,4 @@ The Agent Booster tests need `npm install --ignore-scripts` at the repository ro
 
 ## License
 
-MIT. See [LICENSE](LICENSE).
+MIT. See [LICENSE](https://github.com/ruvnet/rune/blob/main/LICENSE).
