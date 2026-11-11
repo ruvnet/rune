@@ -1,7 +1,8 @@
 # 0.3.0 release candidate
 
-Status: prepared, not published. All eight published packages move together to
-0.3.0; rune-study remains non-publishable.
+All eight published packages move together to 0.3.0; rune-study remains
+non-publishable. The registry is the source of truth for whether a version is
+published.
 
 ## Migration
 
